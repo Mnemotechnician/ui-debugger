@@ -1,0 +1,27 @@
+# tip: you can remove all the comments by replacing the following regex with an empty string: ^#.*
+
+# name of this mod. when your sprites are added to the texture atlas, their names are prefixed with this name.
+# e.g. in order to load a sprite of a mod named "kmmt", you will have to do "Core.atlas.find("kmmt-SPRITE_NAME")
+name: "kmmt"
+# description displayed in the mod browser / list
+description: '''
+My own template for mindustry mods. Written in kotlin, uses kotlin dsl.
+
+If you're viewing this in the mod browser, do not install this mod.
+This mod doesn't add anything to the game, nor does it change anything.
+'''
+# name displayed in the mod browser / list
+displayName: "[Kotlin] Mindustry Mod Template"
+# author name displayed in the mod browser / list
+author: "Мнемотехник"
+# the minimum major game version required for this mod to work. note that mods with MGV <= 104 will not work in v6.
+minGameVersion: "135"
+# mod version displayed in the mod browser / list
+version: "1.0"
+
+# the full name of the main class of your mod, e.g. "your.class.package.YourClassName".
+# the class MUST extend "mindustry.mod.Mod". If this class doesn't exist or doesn't extend Mod, the whole mod will be ignored.
+main: "com.github.mnemotechnician.kmmt.ExampleMod"
+# set to true in order to make this mod multiplayer-compatible.
+# note that any new content added by the mod will not work in multiplayer: it will only cause desync.
+hidden: false

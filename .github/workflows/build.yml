@@ -1,0 +1,26 @@
+on: [push, workflow_dispatch]
+name: Building
+
+jobs:
+  building:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Add build tools to the $PATH
+        run: echo "${ANDROID_HOME}/build-tools/30.0.1" >> $GITHUB_PATH
+      
+      - name: Compile the mod
+        run: |
+          chmod +x ./gradlew
+          ./gradlew release
+        
+      - name: Upload the artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.event.repository.name }}-zipped
+          # <!!!!!> modify the line below if you want to change jar name (replace compiled-mod with whatever you set in build.gradle.kts)
+          path: mod-src/build/libs/compiled-mod-any-platform.jar
+        
