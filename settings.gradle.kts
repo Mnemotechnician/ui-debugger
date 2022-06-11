@@ -1,2 +1,2 @@
-rootProject.name = "kotlin-mindustry-mod-template"
+rootProject.name = "ui-debugger"
 include("mod-src")
