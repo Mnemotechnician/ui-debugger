@@ -4,7 +4,7 @@ import arc.Core
 import arc.graphics.Color
 import arc.graphics.g2d.*
 import arc.scene.*
-import arc.util.*
+import arc.util.Tmp
 import com.github.mnemotechnician.uidebugger.service.Service
 import com.github.mnemotechnician.uidebugger.util.Prefs
 import mindustry.graphics.Layer
@@ -31,12 +31,10 @@ class BoundsDebuggerService : Service() {
 
 	private fun renderBounds(element: Element) {
 		Draw.color(when {
-			element.visible && element.isTouchable -> Color.blue // visible and touchable
+			element.visible && element.isTouchable -> Color.green // visible and touchable
 			element.visible -> Color.yellow // visible but not touchable
-			element.isTouchable -> Color.orange // touchable but not visible?
-			else -> Color.red // neither visible nor touchable
-		})
-		Draw.alpha(0.3f)
+			else -> Color.red // invisible
+		}, 0.3f)
 
 		val coords = element.localToStageCoordinates(Tmp.v1.set(0f, 0f))
 		Lines.rect(coords.x, coords.y, element.width, element.height)
