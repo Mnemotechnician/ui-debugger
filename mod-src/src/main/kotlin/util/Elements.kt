@@ -1,7 +1,9 @@
 package com.github.mnemotechnician.uidebugger.util
 
+import arc.Core
 import arc.scene.Element
 import arc.scene.Group
+import arc.scene.ui.Label
 import arc.scene.ui.TextButton
 import com.github.mnemotechnician.mkui.content
 
@@ -18,13 +20,20 @@ fun Any.simpleName(): String = this::class.simpleName ?: let {
 	return "Any"
 }
 
-fun Element?.elementToString(): String = when (this) {
-	null -> "none"
-	is TextButton -> "${simpleName()} ($content)"
-	is Group -> "${simpleName()} (${ when (val num = children.size) {
-		0 -> "empty"
-		1 -> "1 child"
-		else -> "$num children"
-	} })"
-	else -> simpleName()
+fun Element?.elementToString(): String {
+	if (this == null) return "<none>"
+
+	return when (this) {
+		Core.scene.root -> "<Scene root>"
+		is Label -> "${simpleName()} (${content.ifEmpty { "empty"}})"
+		is TextButton -> "${simpleName()} (${content.ifEmpty { "empty" }})"
+		is Group -> "${simpleName()} (${ when (val num = children.size) {
+			0 -> "empty"
+			1 -> "1 child"
+			else -> "$num children"
+		} })"
+		else -> simpleName()
+	}.let {
+		if (name != null && name.isNotEmpty()) "$name — $it" else it
+	}
 }

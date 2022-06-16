@@ -10,8 +10,10 @@ import arc.scene.event.*
 import arc.scene.ui.Dialog
 import arc.scene.ui.layout.Cell
 import arc.scene.ui.layout.Table
-import arc.util.*
+import arc.util.Align
+import arc.util.Tmp
 import com.github.mnemotechnician.mkui.*
+import com.github.mnemotechnician.uidebugger.element.elementDisplay
 import com.github.mnemotechnician.uidebugger.element.propertyField
 import com.github.mnemotechnician.uidebugger.service.Service
 import com.github.mnemotechnician.uidebugger.service.ServiceManager
@@ -25,7 +27,7 @@ import mindustry.ui.Styles
  *
  * After applying the fragment to some table, use [DebuggerMenuFragment.onElementSelection]
  * to close any windows, dialogs and anything else that can obscure the user's view
- * and then show it again when the selection ends.
+ * and then show them again when the selection ends.
  */
 object DebuggerMenuFragment : Fragment<Group, Table>() {
 	/** Current selected element. Null if the user hasn't selected one. */
@@ -55,28 +57,10 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 
 		titleTable.apply {
 			row()
-			addLabel({ if (lastSelectedElement == null) "" else "${lastSelectedElement!!::class.simpleName} — ${Bundles.clickConfirm}"}).row()
+			addLabel({ if (lastSelectedElement == null) "" else "${lastSelectedElement!!::class.simpleName} — ${Bundles.clickConfirm}" }).row()
 		}.row()
 
-		addListener(object : InputListener() {
-			override fun touchDown(event: InputEvent?, x: Float, y: Float, pointer: Int, button: KeyCode?): Boolean {
-				touchable = Touchable.disabled
-				val coords = localToStageCoordinates(Tmp.v1.set(x, y))
-				val element = Core.scene.root.hit(coords.x, coords.y, true)
-				touchable = Touchable.enabled
-				
-				Log.info("click") //TODO remove
-
-				if (lastSelectedElement == element && element != null) {
-					currentElement = element
-					elementSelectionFinish()
-				} else {
-					lastSelectedElement = element
-				}
-
-				return false
-			}
-		})
+		addListener(SelectionInputListener(this))
 	}
 
 	override fun build() = createTable(Styles.black5) {
@@ -95,6 +79,10 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 
 		addTable(Tex.button) {
 			pager {
+				addPage("preview") {
+					elementDisplay(Tex.button) { currentElement }.size(250f)
+				}
+
 				addPage("properties") {
 					addTable(Styles.black3) {
 						addLabel({
@@ -119,47 +107,30 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 							properties(
 								{ currentElement },
 								{ it.toFloat() },
+								{ true },
 								"x" to "x",
-								"y" to "y"
-							).row()
-
-							properties(
-								{ currentElement },
-								{ it.toFloat() },
+								"y" to "y",
 								"width" to "width",
 								"height" to "height"
-							).row()
+							)
 
-							addCollapser({ currentCell != null }, animate = false) {
-								defaults().marginBottom(5f)
+							addLabel("Cell-specific").colspan(4).labelAlign(Align.left).growX().row()
 
-								addLabel("Cell-specific").growX().left().row()
+							properties(
+								{ currentCell },
+								{ it.toFloat() },
+								{ currentCell != null },
+								"min width" to "minWidth",
+								"cell height" to "minHeight",
+								"max width" to "maxWidth",
+								"max height" to "maxHeight",
+								"fill x" to "fillX",
+								"fill y" to "fillY",
+								"expand x" to "expandX",
+								"expand y" to "expandY"
+							)
 
-								properties(
-									{ currentCell },
-									{ it.toFloat() },
-									"min width" to "minWidth",
-									"cell height" to "minHeight"
-								).row()
-
-								properties(
-									{ currentCell },
-									{ it.toFloat() },
-									"max width" to "maxWidth",
-									"max height" to "maxHeight"
-								).row()
-
-								properties(
-									{ currentCell },
-									{ it.toBooleanStrict() },
-									"fill x" to "fillX",
-									"fill y" to "fillY",
-									"expand x" to "expandX",
-									"expand y" to "expandY"
-								).row()
-							}.row()
-
-							addLabel("Other").growX().left().row()
+							addLabel("Other").labelAlign(Align.left).colspan(4).growX().row()
 
 							val touchabilityMap = mapOf(
 								"enabled" to Touchable.enabled,
@@ -167,14 +138,10 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 								"disabled" to Touchable.disabled
 							)
 
-							addTable {
-								defaults().pad(5f)
-
-								addLabel("visible")
-								propertyField({ currentElement }, Element::visible) { it.lowercase().toBooleanStrict() }
-								addLabel("touchable")
-								propertyField({ currentElement }, Element::touchable) { touchabilityMap[it.lowercase()] }
-							}.growX().row()
+							addLabel("visible")
+							propertyField({ currentElement }, Element::visible) { it.lowercase().toBooleanStrict() }
+							addLabel("touchable")
+							propertyField({ currentElement }, Element::touchable) { touchabilityMap[it.lowercase()] }
 						}.grow().row()
 
 						addTable {
@@ -203,6 +170,7 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 
 						textButton("select") {
 							currentElement = currentElement!!.parent
+							updateHierarchyTable()
 						}.disabled { currentElement?.parent == null }
 					}.growX().row()
 
@@ -247,15 +215,22 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 	private inline fun <reified O: Any, T> Table.properties(
 		noinline objProvider: () -> O?,
 		noinline converter: (String) -> T,
+		crossinline condition: () -> Boolean,
 		vararg fields: Pair<String, String>
-	) = addTable {
+	) {
 		defaults().growX().pad(5f)
 
-		fields.forEach { field ->
+		fields.forEachIndexed { index, field ->
 			addLabel(field.first)
-			propertyField(objProvider, O::class.mutablePropertyFor(field.second), converter)
+			propertyField(objProvider, O::class.mutablePropertyFor(field.second), converter).also {
+				it.disabled { !condition() }
+			}
+
+			if (index % 2 == 1) row()
 		}
-	}.growX()
+
+		row()
+	}
 
 	/**
 	 * Invokes the element selection, sets the [currentElement] field on success.
@@ -281,7 +256,7 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 	 * Updates the hierarchy table.
 	 * Does nothing if the fragment hasn't been built yet or there's no selected element.
 	 */
-	fun updateHierarchyTable() {
+	private fun updateHierarchyTable() {
 		val element = currentElement ?: return
 
 		with(hierarchyTable ?: return) {
@@ -299,6 +274,7 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 
 						textButton("select") {
 							currentElement = child
+							updateHierarchyTable()
 						}.scaleFont(0.8f)
 					}.row()
 				}
@@ -315,6 +291,9 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 		selectionEndListener = end
 	}
 
+	/**
+	 * Highlights [lastSelectedElement] when active.
+	 */
 	private class ElementHighlighterService : Service() {
 		override fun start() {}
 		override fun stop() {}
@@ -334,6 +313,39 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 				Draw.flush()
 			}
 		}
+	}
 
+	/**
+	 * When the user touches the element this listener is applied to,
+	 * [targetElement] is made non-touchable, it's checked which element is located
+	 * at the position of touch, the target element is made touchable again
+	 * and then the touched element is assigned to either [lastSelectedElement] or [currentElement].
+	 */
+	class SelectionInputListener(val targetElement: Element) : InputListener() {
+		override fun touchDown(event: InputEvent?, x: Float, y: Float, pointer: Int, button: KeyCode?): Boolean {
+			val element = elementAt(x, y)
+
+			if (lastSelectedElement == element && element != null) {
+				currentElement = element
+				elementSelectionFinish()
+			} else {
+				lastSelectedElement = element
+			}
+
+			return true
+		}
+
+		override fun touchDragged(event: InputEvent?, x: Float, y: Float, pointer: Int) {
+			lastSelectedElement = elementAt(x, y)
+		}
+
+		private fun elementAt(x: Float, y: Float): Element? {
+			targetElement.touchable = Touchable.disabled
+			val coords = targetElement.localToStageCoordinates(Tmp.v1.set(x, y))
+
+			return Core.scene.root.hit(coords.x, coords.y, true).also {
+				targetElement.touchable = Touchable.enabled
+			}
+		}
 	}
 }

@@ -2,8 +2,10 @@ package com.github.mnemotechnician.uidebugger.service.impl
 
 import arc.Core
 import arc.graphics.Color
-import arc.graphics.g2d.*
-import arc.scene.*
+import arc.graphics.g2d.Draw
+import arc.graphics.g2d.Lines
+import arc.scene.Element
+import arc.scene.Group
 import arc.util.Tmp
 import com.github.mnemotechnician.uidebugger.service.Service
 import com.github.mnemotechnician.uidebugger.util.Prefs
@@ -30,9 +32,11 @@ class BoundsDebuggerService : Service() {
 	}
 
 	private fun renderBounds(element: Element) {
+		val visible = element.visible && element.visibility.get()
+
 		Draw.color(when {
-			element.visible && element.isTouchable -> Color.green // visible and touchable
-			element.visible -> Color.yellow // visible but not touchable
+			visible && element.isTouchable -> Color.green // visible and touchable
+			visible -> Color.yellow // visible but not touchable
 			else -> Color.red // invisible
 		}, 0.3f)
 
