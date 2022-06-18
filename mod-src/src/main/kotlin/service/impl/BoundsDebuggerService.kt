@@ -26,13 +26,13 @@ class BoundsDebuggerService : Service() {
 
 		Draw.draw(Layer.max) {
 			Lines.stroke(2f)
-			renderBounds(Core.scene.root)
+			renderBounds(Core.scene.root, true)
 			Draw.flush()
 		}
 	}
 
-	private fun renderBounds(element: Element) {
-		val visible = element.visible && (element.visibility?.get() ?: true)
+	private fun renderBounds(element: Element, parentVisible: Boolean) {
+		val visible = element.visible && parentVisible
 
 		Draw.color(when {
 			visible && element.isTouchable -> Color.green // visible and touchable
@@ -46,7 +46,7 @@ class BoundsDebuggerService : Service() {
 		if (element is Group) {
 			for (child in element.children) {
 				if (child.visible || Prefs.forceElementDebug) {
-					renderBounds(child)
+					renderBounds(child, visible)
 				}
 			}
 		}
