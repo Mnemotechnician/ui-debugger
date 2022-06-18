@@ -1,12 +1,5 @@
-# Kotlin mindustry mod template
-My own template. Differs from the official template, uses kotlin gradle dsl.
-
-# If you're going to use this template, make sure you follow these steps:
-- [X] Change the root project name in [settings.gradle.kts](settings.gradle.kts)
-- [X] Read the comments in [build.gradle.kts](mod-src/build.gradle.kts) and perform any required modifications
-- [X] Change the package name of the [main mod class](mod-src/src/main/kotlin/UiDebugger.kt). For example, if you're using the github-based naming convention, `com.github.mnemotechnician.kmmt` should become `com.github.YOUR_USER_NAME.YOUR_REPO_OR_MOD_NAME`. You may want to use a different convention, tho.
-- [X] Change the values in [mod.hjson](mod.hjson)
-- [X] After uploading the mod to github, add `mindustry-mod` + `mindustry-mod-v6` or `mindustry-mod-v7` to the repository topics in order for your mod to appear in the mod browser
+# UI Debugger
+A ui debugger made by me. This mod is very far from being complete, if you use it, don't expect it to be stable.
 
 # Building
 ## Via github actions (this is the best variant for beginners)
