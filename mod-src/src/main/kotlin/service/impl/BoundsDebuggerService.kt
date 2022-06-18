@@ -32,7 +32,7 @@ class BoundsDebuggerService : Service() {
 	}
 
 	private fun renderBounds(element: Element) {
-		val visible = element.visible && element.visibility.get()
+		val visible = element.visible && (element.visibility?.get() ?: true)
 
 		Draw.color(when {
 			visible && element.isTouchable -> Color.green // visible and touchable

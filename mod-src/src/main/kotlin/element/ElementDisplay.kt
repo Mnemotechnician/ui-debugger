@@ -54,7 +54,7 @@ class ElementDisplay(
 			// hardcoded padding of 3
 			if (width < 6 || height < 6) return
 
-			Draw.color(olor.red)
+			Draw.color(Color.red)
 			Icon.cancel.draw(x + 3, y + 3, width - 3, height - 3)
 		}
 	}
