@@ -21,6 +21,5 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ${{ github.event.repository.name }}-zipped
-          # <!!!!!> modify the line below if you want to change jar name (replace compiled-mod with whatever you set in build.gradle.kts)
-          path: mod-src/build/libs/compiled-mod-any-platform.jar
+          path: mod-src/build/libs/ui-debugger-any-platform.jar
         
