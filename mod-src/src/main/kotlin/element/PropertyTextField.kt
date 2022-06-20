@@ -2,8 +2,7 @@ package com.github.mnemotechnician.uidebugger.element
 
 import arc.graphics.Color
 import arc.math.Interp
-import arc.scene.actions.Actions.color
-import arc.scene.actions.Actions.sequence
+import arc.scene.actions.Actions.*
 import arc.scene.ui.TextField
 import arc.scene.ui.layout.Cell
 import arc.scene.ui.layout.Table
@@ -15,20 +14,24 @@ import kotlin.reflect.KMutableProperty1
  * A text field that automatically updates to match the underlying property
  * and automatically updates the underlying property.
  *
- * When [obj] is null, the field is disabled.
+ * When [obj] is null, the field is disabled completely.
  *
- * @param T the type of the property. Must be toString()-able.
+ * Disabling this element normally makes it ignore any user input, effectively making it read-only.
+ *
+ * @param T the type of the property.
  * @param O the type of the object this property belongs to.
  *
  * @param obj the object this property belongs to.
  * @param property the property this field represents.
  * @param converter converts the user input to the type of the property. Should throw an exception if the input is not valid.
+ * @param backConverter converts the value of the property to string. Defaults to a simple `.toString()` call.
  */
 @Suppress("MemberVisibilityCanBePrivate", "LeakingThis")
 open class PropertyTextField<T, O>(
 	var obj: O?,
 	protected val property: KMutableProperty1<O, T>,
 	protected val converter: (String) -> T,
+	protected val backConverter: (T) -> String = { it.toString() },
 	style: TextFieldStyle = Styles.defaultField
 ) : TextField(
 	obj?.let { property.get(it).toString() }.orEmpty(),
@@ -42,12 +45,20 @@ open class PropertyTextField<T, O>(
 		changed {
 			if (obj == null) return@changed
 
+			if (disabled) {
+				// cancel the input, shouldn't be called since there's a text filter.
+				updateText(property.get(obj!!))
+				return@changed
+			}
+
 			try {
 				updateProperty()
 			} catch (e: Exception) {
 				fail()
 			}
 		}
+
+		setFilter { _, _ -> !disabled }
 	}
 
 	/**
@@ -55,7 +66,9 @@ open class PropertyTextField<T, O>(
 	 */
 	open fun updateProperty() {
 		val value = converter(content)
+
 		property.set(obj!!, value)
+		lastValue = value
 	}
 
 	/**
@@ -64,9 +77,14 @@ open class PropertyTextField<T, O>(
 	protected open fun fail() {
 		clearActions()
 
-		addAction(sequence(
-			color(Color.red, 0f),
-			color(Color.white, 2.5f, Interp.bounceOut)
+		addAction(parallel(
+			sequence(
+				color(Color.red, 0f),
+				color(Color.white, 2.5f, Interp.bounceOut)
+			),
+			translateBy(50f, 0f, 1.5f, Interp.bounceOut),
+			delay(0.5f, translateBy(-100f, 0f, 1.5f, Interp.bounceOut)),
+			delay(1f, translateBy(50f, 0f, 1.5f, Interp.sineOut))
 		))
 	}
 
@@ -83,6 +101,9 @@ open class PropertyTextField<T, O>(
 				updateText(new)
 				lastValue = new
 			}
+		} else {
+			lastValue = null
+			content = ""
 		}
 	}
 
@@ -91,7 +112,7 @@ open class PropertyTextField<T, O>(
 	 * Called when the value of the property changes.
 	 */
 	protected open fun updateText(value: T) {
-		content = value.toString()
+		content = if (value != null) backConverter(value) else ""
 	}
 
 	/**
@@ -105,21 +126,17 @@ open class PropertyTextField<T, O>(
 }
 
 /**
- * Adds a property text field with a constant object.
- *
- * @see PropertyTextField
- */
-fun <T, O: Any> Table.propertyFieldConst(obj: O, property: KMutableProperty1<O, T>, converter: (String) -> T): Cell<PropertyTextField<T, O>> {
-	return add(PropertyTextField(obj, property, converter))
-}
-
-/**
  * Adds a property text field with a dynamic object, supplied by [objProvider].
  *
  * @see PropertyTextField
  */
-fun <T, O: Any> Table.propertyField(objProvider: () -> O?, property: KMutableProperty1<O, T>, converter: (String) -> T): Cell<PropertyTextField<T, O>> {
-	return add(PropertyTextField(objProvider(), property, converter).also {
+fun <T, O: Any> Table.propertyField(
+	objProvider: () -> O?,
+	property: KMutableProperty1<O, T>,
+	converter: (String) -> T,
+	backConverter: (T) -> String = { it.toString() }
+): Cell<PropertyTextField<T, O>> {
+	return add(PropertyTextField(objProvider(), property, converter, backConverter).also {
 		it.objectProvider(objProvider)
 	})
 }

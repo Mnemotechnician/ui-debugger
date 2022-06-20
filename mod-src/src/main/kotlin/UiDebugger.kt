@@ -1,9 +1,12 @@
 package com.github.mnemotechnician.uidebugger
 
-import arc.*
+import arc.Core
+import arc.Events
 import arc.scene.ui.Button
 import arc.scene.ui.layout.Table
 import arc.util.*
+import com.github.mnemotechnician.mkui.textButton
+import com.github.mnemotechnician.mkui.windows.WindowManager
 import com.github.mnemotechnician.uidebugger.fragment.DebuggerMenuFragment
 import com.github.mnemotechnician.uidebugger.service.ServiceManager
 import com.github.mnemotechnician.uidebugger.service.impl.BoundsDebuggerService
@@ -11,6 +14,7 @@ import com.github.mnemotechnician.uidebugger.util.Bundles
 import mindustry.Vars
 import mindustry.game.EventType
 import mindustry.gen.Icon
+import mindustry.graphics.Pal
 import mindustry.mod.Mod
 import mindustry.ui.MobileButton
 import mindustry.ui.dialogs.BaseDialog
@@ -20,7 +24,21 @@ class UiDebugger : Mod() {
 	private val menuDialog by lazy {
 		BaseDialog(Bundles.uiDebuggerTitle).apply {
 			closeOnBack()
+
+			titleTable.textButton(Bundles.showInWindow) {
+				this@apply.hide()
+				WindowManager.createWindow(Bundles.uiDebugger) {
+					DebuggerMenuFragment.apply(this)
+					DebuggerMenuFragment.onElementSelection(null, null)
+				}
+			}.color(Pal.accent).minWidth(120f)
 		}
+	}
+
+	private val menuButtonAction = Runnable {
+		DebuggerMenuFragment.apply(menuDialog.cont)
+		DebuggerMenuFragment.onElementSelection({ menuDialog.hide() }, { menuDialog.show() })
+		menuDialog.show()
 	}
 
 	init {
@@ -45,18 +63,12 @@ class UiDebugger : Mod() {
 			return
 		}
 
-		val action = Runnable {
-			DebuggerMenuFragment.apply(menuDialog.cont)
-			DebuggerMenuFragment.onElementSelection({ menuDialog.hide() }, { menuDialog.show() })
-			menuDialog.show()
-		}
-
 		if (Vars.mobile) {
 			if (Core.graphics.isPortrait) {
 				container.row()
-				lastButton = container.add(MobileButton(Icon.terminal, Bundles.uiDebugger, action)).colspan(2).get()
+				lastButton = container.add(MobileButton(Icon.terminal, Bundles.uiDebugger, menuButtonAction)).colspan(2).get()
 			} else {
-				lastButton = container.add(MobileButton(Icon.terminal, Bundles.uiDebugger, action)).get()
+				lastButton = container.add(MobileButton(Icon.terminal, Bundles.uiDebugger, menuButtonAction)).get()
 				// move the button to the upper row
 				container.children.let {
 					it.insert(it.size - 2, it.pop())
@@ -64,7 +76,7 @@ class UiDebugger : Mod() {
 			}
 		} else {
 			container.row()
-			lastButton = container.button(Bundles.uiDebugger, Icon.terminal, action).marginLeft(11f).update {
+			lastButton = container.button(Bundles.uiDebugger, Icon.terminal, menuButtonAction).marginLeft(11f).update {
 				it.isChecked = menuDialog.isShown
 			}.get()
 		}

@@ -20,6 +20,7 @@ import com.github.mnemotechnician.uidebugger.service.ServiceManager
 import com.github.mnemotechnician.uidebugger.util.*
 import mindustry.gen.Tex
 import mindustry.graphics.Layer
+import mindustry.graphics.Pal
 import mindustry.ui.Styles
 
 /**
@@ -78,41 +79,47 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 		hsplitter()
 
 		addTable(Tex.button) {
+			addTable(Tex.whiteui) {
+				addLabel({
+					if (currentElement == null) {
+						Bundles.noElement
+					} else {
+						"${Bundles.currentElement}: ${currentElement.elementToString()}"
+					}
+				}).labelAlign(Align.left).growX()
+
+				textButton("Select an element") {
+					invokeElementSelection()
+				}
+			}.growX().pad(5f).color(Pal.darkestGray).row()
+
 			pager {
 				addPage("preview") {
-					elementDisplay(Tex.button) { currentElement }.size(250f)
+					elementDisplay(Tex.button) { currentElement }
 				}
 
 				addPage("properties") {
-					addTable(Styles.black3) {
-						addLabel({
-							if (currentElement == null) {
-								Bundles.noElement
-							} else {
-								"${Bundles.currentElement}: ${currentElement.elementToString()}"
-							}
-						}).labelAlign(Align.left).growX()
-
-						textButton("Select an element") {
-							invokeElementSelection()
-						}
-					}.growX().marginBottom(5f).row()
-
 					addCollapser({ currentElement != null }) {
 						defaults().pad(5f)
 
 						scrollPane {
-							right().defaults().marginBottom(5f)
+							right().defaults().fillX().pad(5f).marginBottom(5f)
 
 							properties(
 								{ currentElement },
 								{ it.toFloat() },
-								{ true },
+								{ currentCell == null }, // table cells override these values, no need to make them editable
 								"x" to "x",
 								"y" to "y",
 								"width" to "width",
 								"height" to "height"
 							)
+
+							addLabel("translation")
+							propertyField({ currentElement }, Element::translation, {
+								// todo: this may be slightly inefficient even for this task?
+								it.split(",").let { currentElement!!.translation.set(it[0].toFloat(), it[1].toFloat()) }
+							}, { "${it.x}, ${it.y}" })
 
 							addLabel("Cell-specific").colspan(4).labelAlign(Align.left).growX().row()
 
@@ -121,7 +128,7 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 								{ it.toFloat() },
 								{ currentCell != null },
 								"min width" to "minWidth",
-								"cell height" to "minHeight",
+								"min height" to "minHeight",
 								"max width" to "maxWidth",
 								"max height" to "maxHeight",
 								"fill x" to "fillX",
@@ -139,15 +146,20 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 							)
 
 							addLabel("visible")
-							propertyField({ currentElement }, Element::visible) { it.lowercase().toBooleanStrict() }
+							propertyField({ currentElement }, Element::visible, { it.lowercase().toBooleanStrict() })
+								.disabled { currentElement?.let { it.visibility != null } ?: false }
+
 							addLabel("touchable")
-							propertyField({ currentElement }, Element::touchable) { touchabilityMap[it.lowercase()] }
+							propertyField({ currentElement }, Element::touchable, { touchabilityMap[it.lowercase()] })
+								.disabled { currentElement?.let { it.touchablility != null } ?: false }
+
+							row()
 						}.grow().row()
 
 						addTable {
 							defaults().pad(5f)
 
-							addLabel("Actions:").labelAlign(Align.right).growX()
+							addLabel("Actions: ").labelAlign(Align.right).growX()
 
 							textButton("cancel") {
 								currentElement = null
@@ -161,6 +173,10 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 							}
 						}.growX()
 					}.growX()
+				}
+
+				addPage("other properties") {
+					addLabel("Not yet implemented.").color(Color.red).scaleFont(2f)
 				}
 
 				addPage("hierarchy") {
@@ -185,8 +201,10 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 						}.growX().row()
 
 						addTable(Tex.button) {
-							hierarchyTable = this
-						}.growX()
+							scrollPane {
+								hierarchyTable = this
+							}.growX()
+						}.grow()
 					}.growX()
 				}
 			}.growX()
@@ -199,9 +217,7 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 	private inline fun Table.toggleOption(label: String, crossinline getter: () -> Boolean, crossinline setter: (Boolean) -> Unit) {
 		addLabel(label).labelAlign(Align.left).growX()
 
-		customButton({
-			addLabel({ if (getter()) Bundles.enabled else Bundles.disabled })
-		}, Styles.togglet) {
+		customButton({ addLabel({ if (getter()) Bundles.enabled else Bundles.disabled }) }, Styles.togglet) {
 			setter(!getter())
 		}.update {
 			it.isChecked = getter()
@@ -218,8 +234,6 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 		crossinline condition: () -> Boolean,
 		vararg fields: Pair<String, String>
 	) {
-		defaults().growX().pad(5f)
-
 		fields.forEachIndexed { index, field ->
 			addLabel(field.first)
 			propertyField(objProvider, O::class.mutablePropertyFor(field.second), converter).also {
@@ -230,6 +244,29 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 		}
 
 		row()
+	}
+
+	/**
+	 * Updates the hierarchy table.
+	 * Does nothing if the fragment hasn't been built yet or there's no selected element.
+	 */
+	private fun updateHierarchyTable() {
+		val element = currentElement ?: return
+
+		with(hierarchyTable ?: return) {
+			clearChildren()
+			defaults().pad(3f).marginBottom(2f).growX()
+
+			if (element is Group) {
+				var index = 1 // no forEachIndexed.
+				element.children.each { child ->
+					textButton("${index++}. ${child.elementToString()}") {
+						currentElement = child
+						updateHierarchyTable()
+					}.color(Pal.accent).row()
+				}
+			}
+		}
 	}
 
 	/**
@@ -253,40 +290,10 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 	}
 
 	/**
-	 * Updates the hierarchy table.
-	 * Does nothing if the fragment hasn't been built yet or there's no selected element.
-	 */
-	private fun updateHierarchyTable() {
-		val element = currentElement ?: return
-
-		with(hierarchyTable ?: return) {
-			clearChildren()
-			defaults().pad(3f).marginBottom(2f)
-
-			if (element is Group) {
-				var index = 1 // no forEachIndexed.
-				element.children.each { child ->
-					addTable(Styles.black3) {
-						addLabel("${index++}.").scaleFont(0.8f)
-						addLabel(child.elementToString()).growX().labelAlign(Align.left).scaleFont(0.8f)
-
-						vsplitter()
-
-						textButton("select") {
-							currentElement = child
-							updateHierarchyTable()
-						}.scaleFont(0.8f)
-					}.row()
-				}
-			}
-		}
-	}
-
-	/**
 	 * Adds element selection listeners, overriding the previous ones.
 	 * Use this to remove anything that can obscure the user's view and then show it again.
 	 */
-	fun onElementSelection(begin: () -> Unit, end: () -> Unit) {
+	fun onElementSelection(begin: (() -> Unit)?, end: (() -> Unit)?) {
 		selectionBeginListener = begin
 		selectionEndListener = end
 	}
@@ -343,7 +350,7 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 			targetElement.touchable = Touchable.disabled
 			val coords = targetElement.localToStageCoordinates(Tmp.v1.set(x, y))
 
-			return Core.scene.root.hit(coords.x, coords.y, true).also {
+			return Core.scene.root.hit(coords.x, coords.y, false).also {
 				targetElement.touchable = Touchable.enabled
 			}
 		}
