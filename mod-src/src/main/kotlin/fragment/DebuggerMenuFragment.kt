@@ -119,7 +119,7 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 							propertyField({ currentElement }, Element::translation, {
 								// todo: this may be slightly inefficient even for this task?
 								it.split(",").let { currentElement!!.translation.set(it[0].toFloat(), it[1].toFloat()) }
-							}, { "${it.x}, ${it.y}" })
+							}, { "${it.x}, ${it.y}" }).colspan(3).row()
 
 							addLabel("Cell-specific").colspan(4).labelAlign(Align.left).growX().row()
 
@@ -347,11 +347,13 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 		}
 
 		private fun elementAt(x: Float, y: Float): Element? {
-			targetElement.touchable = Touchable.disabled
+			val isVisible = targetElement.visible
+			targetElement.visible = false
+
 			val coords = targetElement.localToStageCoordinates(Tmp.v1.set(x, y))
 
-			return Core.scene.root.hit(coords.x, coords.y, false).also {
-				targetElement.touchable = Touchable.enabled
+			return Core.scene.root.hit(coords.x, coords.y, true).also {
+				targetElement.visible = true
 			}
 		}
 	}

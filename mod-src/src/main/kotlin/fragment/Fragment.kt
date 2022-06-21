@@ -1,8 +1,8 @@
 package com.github.mnemotechnician.uidebugger.fragment
 
-import arc.scene.*
+import arc.scene.Element
+import arc.scene.Group
 import arc.scene.ui.layout.Table
-import arc.util.Log
 
 /**
  * Represents a reusable UI fragment.
@@ -41,13 +41,13 @@ abstract class Fragment<T: Group, E: Element> {
 		}
 		val instance = instance!! // please, kotlin, it's definitely not null!
 
-		if (instance.parent != null) {
-			instance.parent.removeChild(instance, true)
+		instance.parent?.let {
+			it.removeChild(instance, true)
+			it.invalidateHierarchy()
 		}
 		instance.clearActions()
 
 		// tables are special, addChild() doesn't work with them.
-		Log.info("$this is applied")
 		if (target is Table) {
 			target.add(instance).also {
 				if (fillTarget) it.grow()

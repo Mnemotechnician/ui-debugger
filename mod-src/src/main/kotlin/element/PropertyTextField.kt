@@ -1,6 +1,7 @@
 package com.github.mnemotechnician.uidebugger.element
 
 import arc.graphics.Color
+import arc.util.Log
 import arc.math.Interp
 import arc.scene.actions.Actions.*
 import arc.scene.ui.TextField
@@ -43,6 +44,8 @@ open class PropertyTextField<T, O>(
 
 	init {
 		changed {
+			Log.info("$this changed")
+
 			if (obj == null) return@changed
 
 			if (disabled) {
@@ -65,7 +68,9 @@ open class PropertyTextField<T, O>(
 	 * Updates the value of the property in accordance with the value of the field.
 	 */
 	open fun updateProperty() {
+		Log.info("updated")
 		val value = converter(content)
+		Log.info("to $value")
 
 		property.set(obj!!, value)
 		lastValue = value
@@ -82,9 +87,9 @@ open class PropertyTextField<T, O>(
 				color(Color.red, 0f),
 				color(Color.white, 2.5f, Interp.bounceOut)
 			),
-			translateBy(50f, 0f, 1.5f, Interp.bounceOut),
-			delay(0.5f, translateBy(-100f, 0f, 1.5f, Interp.bounceOut)),
-			delay(1f, translateBy(50f, 0f, 1.5f, Interp.sineOut))
+			translateBy(25f, 0f, 0.75f, Interp.bounceOut),
+			delay(0.25f, translateBy(-50f, 0f, 0.75f, Interp.bounceOut)),
+			delay(0.5f, translateBy(25f, 0f, 0.75f, Interp.sineOut))
 		))
 	}
 
