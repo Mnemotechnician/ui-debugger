@@ -2,9 +2,13 @@ package com.github.mnemotechnician.uidebugger
 
 import arc.Core
 import arc.Events
+import arc.math.Interp
+import arc.scene.Element
+import arc.scene.actions.Actions.*
 import arc.scene.ui.Button
 import arc.scene.ui.layout.Table
 import arc.util.*
+import com.github.mnemotechnician.mkui.childOrNull
 import com.github.mnemotechnician.mkui.textButton
 import com.github.mnemotechnician.mkui.windows.WindowManager
 import com.github.mnemotechnician.uidebugger.fragment.DebuggerMenuFragment
@@ -80,6 +84,13 @@ class UiDebugger : Mod() {
 				it.isChecked = menuDialog.isShown
 			}.get()
 		}
+
+		// we do a little juicy bit of trolling
+		lastButton?.childOrNull<Element>(0)?.addAction(forever(
+			delay(5f, rotateBy(720f, 0.8f) {
+				Interp.bounceOut.apply(Interp.sine.apply(it)) // sine + bounce in end
+			})
+		))
 
 		container.invalidateHierarchy()
 	}

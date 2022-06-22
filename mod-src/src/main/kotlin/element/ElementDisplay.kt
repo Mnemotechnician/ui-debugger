@@ -7,6 +7,7 @@ import arc.scene.Group
 import arc.scene.style.Drawable
 import arc.scene.ui.layout.Cell
 import arc.scene.ui.layout.Table
+import arc.util.Align
 import mindustry.gen.Icon
 import mindustry.ui.Styles
 
@@ -40,10 +41,9 @@ class ElementDisplay(
 			val oldOriginY = element.originY
 			val oldParent = element.parent
 
-			element.x = 0f
-			element.y = 0f
-			element.originX = 0f
-			element.originY = 0f
+			element.x = width / 2f
+			element.y = height / 2f
+			element.setOrigin(Align.center)
 			element.parent = this
 			element.draw()
 
@@ -59,7 +59,7 @@ class ElementDisplay(
 			if (width < 6 || height < 6) return
 
 			Draw.color(Color.red)
-			Icon.cancel.draw(x + 3, y + 3, width - 3, height - 3)
+			Icon.cancel.draw(3f, 3f, width - 3, height - 3)
 		}
 	}
 

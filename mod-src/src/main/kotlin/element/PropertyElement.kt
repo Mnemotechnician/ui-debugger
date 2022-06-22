@@ -20,7 +20,7 @@ class PropertyElement<T, O>(
 	// todo this
 
 	companion object {
-		val stringModifier: InputConstructor<String> = { prop, prov -> propertyField(prov, prop, { it }, { it }) }
+		val stringModifier: InputConstructor<String?> = { prop, prov -> propertyField(prov, prop, { it }, { it.orEmpty() }) }
 
 		val intModifier: InputConstructor<Int> = { prop, prov -> propertyField(prov, prop, { it.toInt() }) }
 

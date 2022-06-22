@@ -4,8 +4,11 @@ import arc.Core
 import arc.graphics.Color
 import arc.graphics.g2d.*
 import arc.input.KeyCode
+import arc.math.Interp
 import arc.scene.Element
 import arc.scene.Group
+import arc.scene.actions.Actions.color
+import arc.scene.actions.Actions.sequence
 import arc.scene.event.*
 import arc.scene.ui.Dialog
 import arc.scene.ui.layout.Cell
@@ -36,7 +39,7 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 		private set
 	/**
 	 * The cell of the current element.
-	 * Null if [currentElement] is null or not added to a table.
+	 * Null if [currentElement] is null or not a child of a [Table].
 	 */
 	val currentCell: Cell<Element>? get() = currentElement?.cell()
 
@@ -46,7 +49,12 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 	private var selectionBeginListener: (() -> Unit)? = null
 	private var selectionEndListener: (() -> Unit)? = null
 
+	private lateinit var elementInfoTable: Table
 	private var hierarchyTable: Table? = null
+
+	init {
+		ServiceManager.start(ElementInvalidatorService())
+	}
 
 	/**
 	 * A dialog that allows the user to select a ui element.
@@ -79,6 +87,8 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 		hsplitter()
 
 		addTable(Tex.button) {
+			elementInfoTable = this
+
 			addTable(Tex.whiteui) {
 				addLabel({
 					if (currentElement == null) {
@@ -302,10 +312,7 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 	 * Highlights [lastSelectedElement] when active.
 	 */
 	private class ElementHighlighterService : Service() {
-		override fun start() {}
-		override fun stop() {}
 		override fun update() {}
-
 		override fun draw() {
 			val element = lastSelectedElement ?: return
 			val elementCoords = element.localToStageCoordinates(Tmp.v1.set(0f, 0f))
@@ -320,6 +327,30 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 				Draw.flush()
 			}
 		}
+	}
+
+	/**
+	 * Checks if [currentElement] is valid and resets it if it is not.
+	 */
+	private class ElementInvalidatorService : Service() {
+		override fun update() {
+			if (currentElement == null) return
+
+			run valid@ {
+				var parent = currentElement?.parent
+				while (parent != Core.scene.root) {
+					if (parent == null) return@valid
+					parent = parent.parent
+				}
+				return
+			}
+
+			currentElement = null
+			elementInfoTable.addAction(sequence(
+				color(Color.red, 0f), color(Pal.darkestGray, 5f, Interp.sineOut)
+			))
+		}
+		override fun draw() {}
 	}
 
 	/**
@@ -353,7 +384,7 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 			val coords = targetElement.localToStageCoordinates(Tmp.v1.set(x, y))
 
 			return Core.scene.root.hit(coords.x, coords.y, true).also {
-				targetElement.visible = true
+				targetElement.visible = isVisible
 			}
 		}
 	}

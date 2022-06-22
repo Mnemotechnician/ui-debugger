@@ -14,12 +14,12 @@ abstract class Service {
 	/**
 	 * Called when the service is started
 	 */
-	abstract fun start()
+	open fun start() {}
 
 	/**
 	 * Called when the service is stopped
 	 */
-	abstract fun stop()
+	open fun stop() {}
 
 	/**
 	 * Called on every tick when this service is active.
