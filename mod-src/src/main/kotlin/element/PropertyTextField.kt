@@ -108,7 +108,7 @@ open class PropertyTextField<T, O>(
 			}
 		} else {
 			lastValue = null
-			content = ""
+			content = "N / A"
 		}
 	}
 

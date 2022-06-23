@@ -58,6 +58,7 @@ abstract class Fragment<T: Group, E: Element> {
 		}
 
 		instance.invalidateHierarchy()
+		instance.pack()
 	}
 
 	/**

@@ -35,9 +35,10 @@ class UiDebugger : Mod() {
 					DebuggerMenuFragment.apply(this)
 					DebuggerMenuFragment.onElementSelection(null, null)
 				}
-			}.color(Pal.accent).minWidth(120f)
+			}.color(Pal.accent).minWidth(120f).align(Align.top)
 		}
 	}
+
 
 	private val menuButtonAction = Runnable {
 		DebuggerMenuFragment.apply(menuDialog.cont)
@@ -87,9 +88,13 @@ class UiDebugger : Mod() {
 
 		// we do a little juicy bit of trolling
 		lastButton?.childOrNull<Element>(0)?.addAction(forever(
-			delay(5f, rotateBy(720f, 0.8f) {
-				Interp.bounceOut.apply(Interp.sine.apply(it)) // sine + bounce in end
-			})
+			delay(2.4f, parallel(
+				rotateBy(720f, 2.4f) { Interp.swingOut.apply(Interp.sineIn.apply(it)) },
+				sequence(
+					translateBy(0f, 10f, 1.3f, Interp.sineOut),
+					translateBy(0f, -10f, 1.1f) { Interp.bounceOut.apply(Interp.sineIn.apply(it)) }
+				)
+			))
 		))
 
 		container.invalidateHierarchy()

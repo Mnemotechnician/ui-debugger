@@ -8,7 +8,6 @@ import arc.math.Interp
 import arc.scene.Element
 import arc.scene.Group
 import arc.scene.actions.Actions.color
-import arc.scene.actions.Actions.sequence
 import arc.scene.event.*
 import arc.scene.ui.Dialog
 import arc.scene.ui.layout.Cell
@@ -76,14 +75,6 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 		addLabel("UI Debugger", alignment = Align.center).row()
 		hsplitter(padTop = 0f)
 
-		addTable(Tex.button) {
-			toggleOption(Bundles.debugBounds, { Prefs.isElementDebugEnabled }, { Prefs.isElementDebugEnabled = it })
-		}.growX().row()
-
-		addCollapser({ Prefs.isElementDebugEnabled }, Tex.button, animate = true) {
-			toggleOption(Bundles.debugHiddenElements, { Prefs.forceElementDebug }, { Prefs.forceElementDebug = it })
-		}.growX().row()
-
 		hsplitter()
 
 		addTable(Tex.button) {
@@ -104,6 +95,18 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 			}.growX().pad(5f).color(Pal.darkestGray).row()
 
 			pager {
+				addPage("preferences") {
+					defaults().pad(5f)
+
+					addTable(Tex.button) {
+						toggleOption(Bundles.debugBounds, { Prefs.isElementDebugEnabled }, { Prefs.isElementDebugEnabled = it })
+					}.growX().row()
+
+					addCollapser({ Prefs.isElementDebugEnabled }, Tex.button, animate = true) {
+						toggleOption(Bundles.debugHiddenElements, { Prefs.forceElementDebug }, { Prefs.forceElementDebug = it })
+					}.growX().row()
+				}
+
 				addPage("preview") {
 					elementDisplay(Tex.button) { currentElement }
 				}
@@ -346,9 +349,9 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 			}
 
 			currentElement = null
-			elementInfoTable.addAction(sequence(
-				color(Color.red, 0f), color(Pal.darkestGray, 5f, Interp.sineOut)
-			))
+			elementInfoTable.actions(
+				color(Color.red, 0f), color(Color.white, 5f, Interp.sineOut)
+			)
 		}
 		override fun draw() {}
 	}
