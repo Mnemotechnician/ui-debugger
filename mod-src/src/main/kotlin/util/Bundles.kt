@@ -24,12 +24,19 @@ object Bundles {
 
 	/**
 	 * Creates a property delegate that returns the value of the corresponding mindustry bundle string.
+	 * The returned delegate is not to be re-used.
 	 */
 	fun bundle(prefix: String = "uidebugger.") = BundleDelegate(prefix)
 
 	class BundleDelegate internal constructor(val prefix: String) {
+		var cachedName: String? = null
+
 		operator fun getValue(thisRef: Any?, property: KProperty<*>): String {
-			return Core.bundle["$prefix${property.name}"]
+			return Core.bundle[computeName(property)]
+		}
+
+		private fun computeName(property: KProperty<*>) = cachedName ?: "$prefix${property.name}".also {
+			cachedName = it
 		}
 	}
 }

@@ -10,6 +10,7 @@ import arc.scene.ui.layout.Table
 import arc.util.*
 import com.github.mnemotechnician.mkui.childOrNull
 import com.github.mnemotechnician.mkui.textButton
+import com.github.mnemotechnician.mkui.windows.Window
 import com.github.mnemotechnician.mkui.windows.WindowManager
 import com.github.mnemotechnician.uidebugger.fragment.DebuggerMenuFragment
 import com.github.mnemotechnician.uidebugger.service.ServiceManager
@@ -31,14 +32,10 @@ class UiDebugger : Mod() {
 
 			titleTable.textButton(Bundles.showInWindow) {
 				this@apply.hide()
-				WindowManager.createWindow(Bundles.uiDebugger) {
-					DebuggerMenuFragment.apply(this)
-					DebuggerMenuFragment.onElementSelection(null, null)
-				}
+				WindowManager.createWindow(DebuggerMenuWindow()) // todo: can i not recreate it every time?
 			}.color(Pal.accent).minWidth(120f).align(Align.top)
 		}
 	}
-
 
 	private val menuButtonAction = Runnable {
 		DebuggerMenuFragment.apply(menuDialog.cont)
@@ -98,5 +95,15 @@ class UiDebugger : Mod() {
 		))
 
 		container.invalidateHierarchy()
+	}
+
+	private class DebuggerMenuWindow : Window() {
+		override val name = Bundles.uiDebugger
+		override val closeable = true
+
+		override fun onCreate() {
+			DebuggerMenuFragment.apply(table)
+			DebuggerMenuFragment.onElementSelection({ isCollapsed = true }, { isCollapsed = false })
+		}
 	}
 }

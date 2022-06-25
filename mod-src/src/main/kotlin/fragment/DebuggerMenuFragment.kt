@@ -72,11 +72,6 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 	}
 
 	override fun build() = createTable(Styles.black5) {
-		addLabel("UI Debugger", alignment = Align.center).row()
-		hsplitter(padTop = 0f)
-
-		hsplitter()
-
 		addTable(Tex.button) {
 			elementInfoTable = this
 
@@ -221,7 +216,7 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 					}.growX()
 				}
 			}.growX()
-		}.growX()
+		}
 	}
 
 	/**

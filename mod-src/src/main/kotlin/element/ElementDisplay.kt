@@ -2,6 +2,7 @@ package com.github.mnemotechnician.uidebugger.element
 
 import arc.graphics.Color
 import arc.graphics.g2d.Draw
+import arc.math.geom.Vec2
 import arc.scene.Element
 import arc.scene.Group
 import arc.scene.style.Drawable
@@ -22,6 +23,8 @@ class ElementDisplay(
 	var background: Drawable = Styles.black3
 
 	private var elementProvider: (() -> Element?)? = null
+
+	var lastSize = Vec2(0f, 0f)
 
 	init {
 		transform = true
@@ -71,8 +74,13 @@ class ElementDisplay(
 
 			if (element != newElement) {
 				element = newElement
-				invalidate()
 			}
+		}
+
+		if (element != null && (element!!.width != lastSize.x || element!!.height != lastSize.y)) {
+			lastSize.set(element!!.width, element!!.height)
+			invalidateHierarchy()
+			pack()
 		}
 	}
 
