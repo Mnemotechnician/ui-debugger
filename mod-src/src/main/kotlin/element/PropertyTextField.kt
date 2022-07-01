@@ -1,9 +1,10 @@
 package com.github.mnemotechnician.uidebugger.element
 
+import arc.Core
 import arc.graphics.Color
-import arc.util.Log
 import arc.math.Interp
 import arc.scene.actions.Actions.*
+import arc.scene.actions.ColorAction
 import arc.scene.ui.TextField
 import arc.scene.ui.layout.Cell
 import arc.scene.ui.layout.Table
@@ -17,7 +18,8 @@ import kotlin.reflect.KMutableProperty1
  *
  * When [obj] is null, the field is disabled completely.
  *
- * Disabling this element normally makes it ignore any user input, effectively making it read-only.
+ * Locking (setting [isLocked] to true) this element normally makes it discard any user input,
+ * effectively making it read-only.
  *
  * @param T the type of the property.
  * @param O the type of the object this property belongs to.
@@ -39,18 +41,26 @@ open class PropertyTextField<T, O>(
 	style
 ) {
 	protected var lastValue: T? = obj?.let { property.get(it) }
+	/** Some properties might retain their reference but have the referenced object modified. */
+	protected var lastHashCode = 0
 
 	protected var objProvider: (() -> O?)? = null
 
+	/**
+	 * If true, any user input is discarded.
+	 */
+	var isLocked = false
+	protected var lockProvider: (() -> Boolean)? = null
+
+	var lastColorAction: ColorAction? = null
+
 	init {
 		changed {
-			Log.info("$this changed")
-
 			if (obj == null) return@changed
 
-			if (disabled) {
-				// cancel the input, shouldn't be called since there's a text filter.
-				updateText(property.get(obj!!))
+			if (isLocked) {
+				// discard the input.
+				Core.app.post { updateText(property.get(obj!!)) }
 				return@changed
 			}
 
@@ -60,20 +70,17 @@ open class PropertyTextField<T, O>(
 				fail()
 			}
 		}
-
-		setFilter { _, _ -> !disabled }
 	}
 
 	/**
 	 * Updates the value of the property in accordance with the value of the field.
 	 */
 	open fun updateProperty() {
-		Log.info("updated")
 		val value = converter(content)
-		Log.info("to $value")
 
 		property.set(obj!!, value)
 		lastValue = value
+		lastHashCode = value.hashCode()
 	}
 
 	/**
@@ -84,8 +91,8 @@ open class PropertyTextField<T, O>(
 
 		addAction(parallel(
 			sequence(
-				color(Color.red, 0f),
-				color(Color.white, 2.5f, Interp.bounceOut)
+				color(failColor, 0f),
+				color(Color.white, 2.5f, Interp.bounceOut).also { lastColorAction = it }
 			),
 			translateBy(25f, 0f, 0.75f, Interp.bounceOut),
 			delay(0.25f, translateBy(-50f, 0f, 0.75f, Interp.bounceOut)),
@@ -101,14 +108,27 @@ open class PropertyTextField<T, O>(
 		}
 
 		if (obj != null) {
+			if (lockProvider != null) {
+				isLocked = lockProvider!!()
+			}
+
 			val new = property.get(obj!!)
-			if (new != lastValue) {
+			if (new != lastValue || new.hashCode() != lastHashCode) {
 				updateText(new)
 				lastValue = new
+				lastHashCode = new.hashCode()
 			}
 		} else {
 			lastValue = null
+			lastHashCode = 0
 			content = "N / A"
+		}
+
+		val newColor = if (isLocked) Color.gray else Color.white
+		if (!hasActions() || lastColorAction?.target != this) {
+			color.set(newColor)
+		} else {
+			lastColorAction?.color = newColor
 		}
 	}
 
@@ -118,6 +138,12 @@ open class PropertyTextField<T, O>(
 	 */
 	protected open fun updateText(value: T) {
 		content = if (value != null) backConverter(value) else ""
+
+		lastColorAction?.let { removeAction(it) }
+		actions(
+			color(updateColor),
+			color(Color.white, 1.5f, Interp.circleIn).also { lastColorAction = it }
+		)
 	}
 
 	/**
@@ -127,6 +153,20 @@ open class PropertyTextField<T, O>(
 	 */
 	fun objectProvider(provider: (() -> O?)?) {
 		objProvider = provider
+	}
+
+	/**
+	 * Sets a lock provider.
+	 * This function is called whenever this element is updated. It's result determines whether this input field is locked.
+	 * @see isLocked
+	 */
+	fun lockProvider(provider: (() -> Boolean)?) {
+		lockProvider = provider
+	}
+
+	companion object {
+		val failColor: Color = Color.red.cpy()
+		val updateColor: Color = Color.valueOf("8040bb")
 	}
 }
 

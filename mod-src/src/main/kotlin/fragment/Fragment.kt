@@ -3,6 +3,7 @@ package com.github.mnemotechnician.uidebugger.fragment
 import arc.scene.Element
 import arc.scene.Group
 import arc.scene.ui.layout.Table
+import com.github.mnemotechnician.mkui.deepShrink
 
 /**
  * Represents a reusable UI fragment.
@@ -22,7 +23,7 @@ abstract class Fragment<T: Group, E: Element> {
 	private var instance: T? = null
 
 	/** Whether this fragment is applied to any group */
-	val isApplied get() = instance != null
+	val isApplied get() = instance != null && instance!!.parent != null && instance!!.scene != null
 
 	/**
 	 * Applies this fragment to the target group, building it if necessary.
@@ -56,7 +57,10 @@ abstract class Fragment<T: Group, E: Element> {
 			instance.setFillParent(fillTarget)
 			target.addChild(instance)
 		}
+		
+		applied()
 
+		instance.deepShrink()
 		instance.invalidateHierarchy()
 		instance.pack()
 	}
@@ -67,4 +71,10 @@ abstract class Fragment<T: Group, E: Element> {
 	 * @return an element which will be added to the target groups.
 	 */
 	protected abstract fun build(): T
+
+	/**
+	 * Called when this fragment is applied.
+	 */
+	protected open fun applied() {
+	}
 }

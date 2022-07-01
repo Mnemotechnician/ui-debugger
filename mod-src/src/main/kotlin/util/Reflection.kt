@@ -29,6 +29,8 @@ fun <T, O: Any> KClass<O>.mutablePropertyFor(fieldName: String): KMutablePropert
  * @throws NotImplementedError when a non-implemented feature is used.
  */
 fun <T, O: Any> Field.createMutableProperty() : KMutableProperty1<O, T> {
+	isAccessible = true
+
 	return object : KMutableProperty1<O, T> {
 		override val annotations get() = listOf<Annotation>()
 		override val getter get() = throw NotImplementedError()
@@ -60,3 +62,14 @@ fun <T, O: Any> Field.createMutableProperty() : KMutableProperty1<O, T> {
 		}
 	}
 }
+
+/**
+ * Returns a list containing all superclasses of this class and this class itself.
+ */
+fun Class<*>.getHierarchy() = ArrayList<Class<*>>().apply {
+	var cls: Class<*>? = this@getHierarchy
+	while (cls != null) {
+		add(cls)
+		cls = cls.superclass
+	}
+}.also { it.reverse() }

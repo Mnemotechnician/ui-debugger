@@ -14,7 +14,9 @@ import com.github.mnemotechnician.mkui.content
 fun Any.simpleName(): String = this::class.simpleName ?: let {
 	var cls = this::class.java.superclass
 	while (cls != null) {
-		cls.superclass?.simpleName?.let { return it }
+		cls.superclass?.simpleName?.let {
+			return it
+		}
 		cls = cls.superclass
 	}
 	return "Any"
@@ -25,8 +27,8 @@ fun Element?.elementToString(): String {
 
 	return when (this) {
 		Core.scene.root -> "<Scene root>"
-		is Label -> "${simpleName()} (${content.ifEmpty { "empty"}})"
-		is TextButton -> "${simpleName()} (${content.ifEmpty { "empty" }})"
+		is Label -> "${simpleName()} (${content.ifEmpty { "empty" }.truncate()})"
+		is TextButton -> "${simpleName()} (${content.ifEmpty { "empty" }.truncate()})"
 		is Group -> "${simpleName()} (${ when (val num = children.size) {
 			0 -> "empty"
 			1 -> "1 child"
@@ -37,3 +39,5 @@ fun Element?.elementToString(): String {
 		if (name != null && name.isNotEmpty()) "$name — $it" else it
 	}
 }
+
+private fun CharSequence.truncate(target: Int = 30) = if (length - 3 > target) "${take(length - 3)}..." else this

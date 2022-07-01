@@ -14,10 +14,10 @@ repositories {
 dependencies {
 	implementation(kotlin("stdlib-jdk8"))
 	
-	compileOnly("com.github.Anuken.Arc:arc-core:master-SNAPSHOT")
-	compileOnly("com.github.Anuken:MindustryJitpack:main-SNAPSHOT")
+	compileOnly("com.github.Anuken.Arc:arc-core:master-da27a54ef9-1") // 2022.06.27.
+	compileOnly("com.github.Anuken:MindustryJitpack:d380051459")
 
-	implementation("com.github.mnemotechnician:mkui:52")
+	implementation("com.github.mnemotechnician:mkui:63")
 }
 
 tasks.withType<KotlinCompile> {
@@ -37,11 +37,11 @@ task("jarAndroid") {
 				No valid Android SDK found. Ensure that ANDROID_HOME is set to your Android SDK directory.
 				Note: if the gradle daemon has been started before ANDROID_HOME env variable was defined, it won't be able to read this variable.
 				In this case you have to run "./gradlew --stop" and try again
-			""".trimIndent());
+			""".trimIndent())
 		}
 		
 		println("searching for an android sdk... ")
-		val platformRoot = File("$sdkRoot/platforms/").listFiles().filter { 
+		val platformRoot = File("$sdkRoot/platforms/").listFiles()?.filter {
 			val fi = File(it, "android.jar")
 			val valid = fi.exists() && it.name.startsWith("android-")
 			
@@ -50,7 +50,7 @@ task("jarAndroid") {
 				println(" — OK.")
 			}
 			return@filter valid
-		}.maxByOrNull {
+		}?.maxByOrNull {
 			it.name.substring("android-".length).toIntOrNull() ?: -1
 		}
 		

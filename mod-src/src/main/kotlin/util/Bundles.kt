@@ -7,6 +7,14 @@ import kotlin.reflect.KProperty
  * Convenient aliases for [arc.Core.bundle] stuff.
  */
 object Bundles {
+	val propertyList by bundle()
+	val currentObject by bundle()
+	val reset by bundle()
+	val showIn by bundle()
+	val inThisTable by bundle()
+	val inWindow by bundle()
+	val classHasNoMembers by bundle()
+
 	val showInWindow by bundle()
 	val debugBounds by bundle()
 	val debugHiddenElements by bundle()

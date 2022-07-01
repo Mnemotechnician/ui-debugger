@@ -1,10 +1,13 @@
 package com.github.mnemotechnician.uidebugger.element
 
+import arc.graphics.Color
+import arc.scene.ui.layout.Cell
 import arc.scene.ui.layout.Table
 import arc.util.Align
 import com.github.mnemotechnician.mkui.*
 import com.github.mnemotechnician.uidebugger.element.PropertyElement.Companion.modifiers
 import com.github.mnemotechnician.uidebugger.util.createMutableProperty
+import mindustry.ui.Styles
 import kotlin.reflect.KMutableProperty1
 
 /**
@@ -26,9 +29,28 @@ typealias InputConstructor<T> = Table.(KMutableProperty1<Any, T>, objProvider: (
 @Suppress("UNCHECKED_CAST")
 class PropertyElement<T, O: Any>(
 	private val objProvider: () -> O?,
-	val property: KMutableProperty1<O, T>,
-	propertyType: Class<T>
+	private val property: KMutableProperty1<O, T>,
+	propertyType: Class<out T>
 ) : Table() {
+	init {
+		addTable {
+			left()
+			addLabel(property.name).labelAlign(Align.left)
+			addLabel(propertyType.toString().substringAfterLast('.')).labelAlign(Align.left).color(Color.gray)
+		}.pad(5f)
+
+		val constructor = (
+			modifiers.getOrDefault(propertyType, null)
+			?: modifiers.entries.find { it.key.isAssignableFrom(propertyType) }?.value
+			?: fallbackModifier
+		) as InputConstructor<T>
+
+		addTable {
+			right().defaults().fillX()
+			constructor(property as KMutableProperty1<Any, T>, objProvider)
+		}.growX().pad(5f)
+	}
+
 	/**
 	 * Creates a [PropertyElement] representing a field of [propertyClass],
 	 * finding the said field by its name.
@@ -36,34 +58,30 @@ class PropertyElement<T, O: Any>(
 	constructor(objProvider: () -> O, propertyClass: Class<T>, propertyName: String)
 		: this(objProvider, propertyClass.getDeclaredField(propertyName).createMutableProperty<T, O>(), propertyClass)
 
-	init {
-		addLabel(property.name).labelAlign(Align.left).pad(5f).growX()
-
-		val constructor = (modifiers.getOrDefault(propertyType, null) ?: let {
-			modifiers.entries.find { it.key.isAssignableFrom(propertyType) }
-		}) as? InputConstructor<T> ?: throw IllegalArgumentException("No input modified for class $propertyType")
-
-		addTable {
-			constructor(property as KMutableProperty1<Any, T>, objProvider)
-		}.pad(5f)
-	}
-
 	companion object {
 		val stringModifier: InputConstructor<String?> = { prop, prov -> propertyField(prov, prop, { it }) }
 
-		val intModifier: InputConstructor<Int?> = { prop, prov -> propertyField(prov, prop, { it.toInt() ?: 0 }) }
+		val intModifier: InputConstructor<Int?> = { prop, prov -> propertyField(prov, prop, { it.toInt() }) }
 
-		val floatModifier: InputConstructor<Float?> = { prop, prov -> propertyField(prov, prop, { it.toFloat() ?: 0f }) }
+		val floatModifier: InputConstructor<Float?> = { prop, prov -> propertyField(prov, prop, { it.toFloat() }) }
 
 		val booleanModifier: InputConstructor<Boolean?> = { prop, prov ->
-			customButton({ prov()?.let { prop.get(it) ?: "null" } ?: "N / A" }) {
-				val instance = prov() ?: return@customButton
-				prop.set(instance, !(prop.get(instance) ?: return@customButton))
+			textButton({ prov()?.let { prop.get(it).toString() } ?: "N / A" }, Styles.togglet) {
+				val instance = prov() ?: return@textButton
+				prop.set(instance, !(prop.get(instance) ?: return@textButton))
 			}.checked { prov()?.let { prop.get(it) } ?: false }
 		}
+		
+		val colorModifier: InputConstructor<Color?> = { prop, prov ->
+			propertyField(prov, prop, {
+				val obj = prov()!! // only gets called when prov() returns a non-null value
+				Color.valueOf(prop.get(obj) ?: Color(), it)
+			}).row()
+		}
 
-		val fallbackModifier: InputConstructor<Boolean> = { prop, prov ->
-			addLabel({ "Unsupported: ${prov()?.let { prop.get(it) ?: "null" } ?: "N / A"}" }).scaleFont(0.6f)
+		val fallbackModifier: InputConstructor<Any?> = { prop, prov ->
+			addLabel("Unsupported: ")
+			addLabel({ prov()?.let { prop.get(it).toString().substringBefore('\n') } ?: "N / A" }).scaleFont(0.6f)
 		}
 
 		/**
@@ -74,6 +92,7 @@ class PropertyElement<T, O: Any>(
 			Int::class.java to intModifier,
 			Float::class.java to floatModifier,
 			Boolean::class.java to booleanModifier,
+			Color::class.java to colorModifier,
 			Any::class.java to fallbackModifier
 		) as MutableMap<out Class<*>, out InputConstructor<*>>
 
@@ -83,8 +102,19 @@ class PropertyElement<T, O: Any>(
 		 */
 		inline fun <reified T> inputConstructorFor(): InputConstructor<T> {
 			return (modifiers.getOrDefault(T::class.java, null) ?: let {
-				modifiers.entries.find { it.key.isAssignableFrom(T::class.java) }
-			}) as? InputConstructor<T> ?: throw IllegalArgumentException("No input modified for class ${T::class}")
+				val cls = T::class.java
+				modifiers.entries.find { it.key.isAssignableFrom(cls) }
+			}?.value ?: fallbackModifier) as InputConstructor<T>
 		}
 	}
 }
+
+/**
+ * Adds a [PropertyElement] to the table.
+ * @see PropertyElement
+ */
+fun <T, O: Any> Table.propertyElement(
+	objProvider: () -> O?,
+	property: KMutableProperty1<O, T>,
+	propertyType: Class<out T>
+): Cell<PropertyElement<T, O>> = add(PropertyElement(objProvider, property, propertyType))

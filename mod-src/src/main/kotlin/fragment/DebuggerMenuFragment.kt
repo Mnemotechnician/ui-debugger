@@ -113,10 +113,17 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 						scrollPane {
 							right().defaults().fillX().pad(5f).marginBottom(5f)
 
+							addLabel("name")
+							propertyField({ currentElement }, Element::name, { it }, { it })
+							addLabel("color")
+							propertyField<Color, _>({ currentElement }, Element::class.mutablePropertyFor("color"), {
+								Color.valueOf(currentElement!!.color, it)
+							}).row()
+							
 							properties(
 								{ currentElement },
 								{ it.toFloat() },
-								{ currentCell == null }, // table cells override these values, no need to make them editable
+								{ true }, // in most cases it will have effect, as the properties are modified reflectively.
 								"x" to "x",
 								"y" to "y",
 								"width" to "width",
@@ -125,7 +132,6 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 
 							addLabel("translation")
 							propertyField({ currentElement }, Element::translation, {
-								// todo: this may be slightly inefficient even for this task?
 								it.split(",").let { currentElement!!.translation.set(it[0].toFloat(), it[1].toFloat()) }
 							}, { "${it.x}, ${it.y}" }).colspan(3).row()
 
@@ -172,6 +178,14 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 							textButton("cancel") {
 								currentElement = null
 							}
+							textButton("shrink") {
+								fun Element.deepShrink() {
+									setSize(0f, 0f)
+									if (this is Group) children.each { it.deepShrink() }
+								}
+								currentElement?.deepShrink()
+								currentElement?.pack()
+							}
 							textButton("invalidate") {
 								currentElement?.invalidateHierarchy()
 							}
@@ -184,7 +198,24 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 				}
 
 				addPage("other properties") {
-					addLabel("Not yet implemented.").color(Color.red).scaleFont(2f)
+					lateinit var table: Table
+					addLabel("Not fully implemented yet.").color(Color.red).scaleFont(1.5f).row()
+
+					addTable {
+						defaults().pad(5f)
+
+						addLabel(Bundles.showIn)
+						textButton(Bundles.inThisTable) {
+							PropertyListFragment.apply(table)
+						}
+						textButton(Bundles.inWindow) {
+							PropertyListFragment.showInWindow()
+						}
+					}.row()
+
+					addTable {
+						table = this
+					}
 				}
 
 				addPage("hierarchy") {
@@ -215,7 +246,7 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 						}.grow()
 					}.growX()
 				}
-			}.growX()
+			}.growX().minSize(150f, 150f)
 		}
 	}
 
@@ -233,8 +264,8 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 	}
 
 	/**
-	 * Adds several multiple property fields based on the providen [Pair]s,
-	 * whose [Pair.first] is the label and [Pair.second] is the property name.
+	 * Adds several multiple property fields based on the providen [Pair]s.
+	 * Each pair of strings represents the following: (label, property name).
 	 */
 	private inline fun <reified O: Any, T> Table.properties(
 		noinline objProvider: () -> O?,
@@ -245,7 +276,7 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 		fields.forEachIndexed { index, field ->
 			addLabel(field.first)
 			propertyField(objProvider, O::class.mutablePropertyFor(field.second), converter).also {
-				it.disabled { !condition() }
+				it.get().lockProvider { !condition() }
 			}
 
 			if (index % 2 == 1) row()

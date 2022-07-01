@@ -11,20 +11,25 @@ import arc.scene.ui.layout.Table
 import arc.util.Align
 import mindustry.gen.Icon
 import mindustry.ui.Styles
+import kotlin.math.min
 
 /**
  * Displays an element inside itself, even if the said element is already added to the scene.
  *
- * Despite being a group, this class __does not__ hold children, and any attempts to add a child will throw an exception.
+ * Despite being a group, this class __does not__ hold children, and any attempt to add a child will throw an exception.
+ *
+ * Making this element display itself may result in undefined behaviour or even infinite recursion.
  */
 class ElementDisplay(
 	var element: Element?
 ) : Group() {
 	var background: Drawable = Styles.black3
+	var maxDisplayHeight = 500f
+	var maxDisplayWidth = 500f
 
 	private var elementProvider: (() -> Element?)? = null
 
-	var lastSize = Vec2(0f, 0f)
+	private var lastSize = Vec2(0f, 0f)
 
 	init {
 		transform = true
@@ -44,9 +49,9 @@ class ElementDisplay(
 			val oldOriginY = element.originY
 			val oldParent = element.parent
 
-			element.x = width / 2f
-			element.y = height / 2f
-			element.setOrigin(Align.center)
+			element.x = 0f
+			element.y = 0f
+			element.setOrigin(Align.bottomLeft)
 			element.parent = this
 			element.draw()
 
@@ -84,9 +89,9 @@ class ElementDisplay(
 		}
 	}
 
-	override fun getPrefWidth() = element?.prefWidth ?: 30f
+	override fun getPrefWidth() = min(element?.prefWidth ?: 30f, maxDisplayWidth)
 
-	override fun getPrefHeight() = element?.prefHeight ?: 30f
+	override fun getPrefHeight() = min(element?.prefHeight ?: 30f, maxDisplayHeight)
 
 	/**
 	 * Sets an element provider, which is called on every frame to provide an [element].
