@@ -21,8 +21,8 @@ import mindustry.graphics.Pal
 object PropertyListFragment : Fragment<Table, Table>() {
 	var currentObject: Any? = null
 		set(value) {
-			if (value != null) rebuild(value::class.java)
 			field = value
+			if (value != null) rebuild(value::class.java)
 		}
 
 	private lateinit var hierarchyRoot: Table
@@ -43,7 +43,7 @@ object PropertyListFragment : Fragment<Table, Table>() {
 				addLabel(")")
 			}.growX()
 
-			textButton(Bundles.reset) {
+			textButton(Bundles.resetToElement) {
 				currentObject = DebuggerMenuFragment.currentElement
 			}
 		}.color(Pal.darkestGray).pad(5f).row()
@@ -61,12 +61,25 @@ object PropertyListFragment : Fragment<Table, Table>() {
 	 * Rebuilds the property list, reusing as much as possible.
 	 */
 	private fun rebuild(forClass: Class<*>) {
-		if (forClass == currentObject?.let { it::class.java }) return
-
 		hierarchyRoot.clearChildren()
 		forClass.getHierarchy().forEach {
 			hierarchyRoot.add(FieldCategory(it)).fillX().row()
 		}
+	}
+
+	/**
+	 * Shows this fragment in a window.
+	 */
+	fun showInWindow() {
+		val newWindow = object : Window() {
+			override val name = Bundles.propertyList
+			override val closeable = true
+			override fun onCreate() {
+				apply(table)
+			}
+		}
+		WindowManager.createWindow(newWindow)
+		window = newWindow
 	}
 
 	/**
@@ -123,21 +136,6 @@ object PropertyListFragment : Fragment<Table, Table>() {
 			val iconUp = TextureRegionDrawable(Icon.up)
 			val iconDown = TextureRegionDrawable(Icon.down)
 		}
-	}
-
-	/**
-	 * Shows this fragment in a window.
-	 */
-	fun showInWindow() {
-		val newWindow = object : Window() {
-			override val name = Bundles.propertyList
-			override val closeable = true
-			override fun onCreate() {
-				apply(table)
-			}
-		}
-		WindowManager.createWindow(newWindow)
-		window = newWindow
 	}
 
 	/**

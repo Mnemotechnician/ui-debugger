@@ -45,8 +45,8 @@ class UiDebugger : Mod() {
 				}.also {
 					WindowManager.createWindow(it)
 				}
-			}.color(Pal.accent).height(30f).align(Align.top).with {
-				it.translation.y += 15f // make it occupy two rows visually
+			}.color(Pal.accent).height(40f).align(Align.top).with {
+				it.translation.y += 20f // make it occupy two rows visually
 
 				it.addAction(forever(sequence(
 					color(Color.green, 1f, Interp.sine),

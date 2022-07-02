@@ -35,7 +35,7 @@ class PropertyElement<T, O: Any>(
 	init {
 		addTable {
 			left()
-			addLabel(property.name).labelAlign(Align.left)
+			addLabel(property.name).labelAlign(Align.left).row()
 			addLabel(propertyType.toString().substringAfterLast('.')).labelAlign(Align.left).color(Color.gray)
 		}.pad(5f)
 
@@ -46,7 +46,7 @@ class PropertyElement<T, O: Any>(
 		) as InputConstructor<T>
 
 		addTable {
-			right().defaults().fillX()
+			right()
 			constructor(property as KMutableProperty1<Any, T>, objProvider)
 		}.growX().pad(5f)
 	}
@@ -59,11 +59,16 @@ class PropertyElement<T, O: Any>(
 		: this(objProvider, propertyClass.getDeclaredField(propertyName).createMutableProperty<T, O>(), propertyClass)
 
 	companion object {
+		// lots of ctrl+c ctrl+v...
 		val stringModifier: InputConstructor<String?> = { prop, prov -> propertyField(prov, prop, { it }) }
 
 		val intModifier: InputConstructor<Int?> = { prop, prov -> propertyField(prov, prop, { it.toInt() }) }
 
+		val longModifier: InputConstructor<Long?> = { prop, prov -> propertyField(prov, prop, { it.toLong() }) }
+
 		val floatModifier: InputConstructor<Float?> = { prop, prov -> propertyField(prov, prop, { it.toFloat() }) }
+
+		val doubleModifier: InputConstructor<Double?> = { prop, prov -> propertyField(prov, prop, { it.toDouble() }) }
 
 		val booleanModifier: InputConstructor<Boolean?> = { prop, prov ->
 			textButton({ prov()?.let { prop.get(it).toString() } ?: "N / A" }, Styles.togglet) {
@@ -90,7 +95,9 @@ class PropertyElement<T, O: Any>(
 		val modifiers = mutableMapOf(
 			String::class.java to stringModifier,
 			Int::class.java to intModifier,
+			Long::class.java to longModifier,
 			Float::class.java to floatModifier,
+			Double::class.java to doubleModifier,
 			Boolean::class.java to booleanModifier,
 			Color::class.java to colorModifier,
 			Any::class.java to fallbackModifier
