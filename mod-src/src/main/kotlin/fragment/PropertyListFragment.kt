@@ -39,7 +39,7 @@ object PropertyListFragment : Fragment<Table, Table>() {
 				addLabel(Bundles.currentObject + ": ")
 				addLabel({ currentObject?.simpleName() ?: "null" }, wrap = false)
 				addLabel(" (")
-				addLabel({ currentObject.toString() }, wrap = false)
+				addLabel({ currentObject.toString().substringBefore('\n') }, wrap = false)
 				addLabel(")")
 			}.growX()
 
@@ -112,7 +112,7 @@ object PropertyListFragment : Fragment<Table, Table>() {
 							{ currentObject },
 							field.createMutableProperty<Any, Any>(),
 							field.type
-						)
+						).fillX()
 
 						imageButton(Icon.right) {
 							currentObject?.let { field.get(it) }?.let { currentObject = it }

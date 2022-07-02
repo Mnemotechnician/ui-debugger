@@ -86,7 +86,7 @@ class PropertyElement<T, O: Any>(
 
 		val fallbackModifier: InputConstructor<Any?> = { prop, prov ->
 			addLabel("Unsupported: ")
-			addLabel({ prov()?.let { prop.get(it).toString().substringBefore('\n') } ?: "N / A" }).scaleFont(0.6f)
+			addLabel({ prov()?.let { prop.get(it).toString().substringBefore('\n') } ?: "N / A" }, wrap = false).scaleFont(0.6f)
 		}
 
 		/**
