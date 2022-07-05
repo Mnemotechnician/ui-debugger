@@ -1,6 +1,7 @@
 package com.github.mnemotechnician.uidebugger.util
 
 import java.lang.reflect.Field
+import java.lang.reflect.Modifier
 import kotlin.reflect.*
 
 /**
@@ -30,13 +31,14 @@ fun <T, O: Any> KClass<O>.mutablePropertyFor(fieldName: String): KMutablePropert
  */
 fun <T, O: Any> Field.createMutableProperty() : KMutableProperty1<O, T> {
 	isAccessible = true
+	val mods = modifiers
 
 	return object : KMutableProperty1<O, T> {
 		override val annotations get() = listOf<Annotation>()
 		override val getter get() = throw NotImplementedError()
 		override val isAbstract get() = false
-		override val isConst get() = false
-		override val isFinal get() = false
+		override val isConst get() = isFinal && Modifier.isStatic(mods) && this@createMutableProperty.type.isPrimitive
+		override val isFinal get() = Modifier.isFinal(mods)
 		override val isLateinit get() = false
 		override val isOpen get() = false
 		override val isSuspend get() = false
@@ -45,7 +47,7 @@ fun <T, O: Any> Field.createMutableProperty() : KMutableProperty1<O, T> {
 		override val returnType get() = throw NotImplementedError()
 		override val setter get() = throw NotImplementedError()
 		override val typeParameters get() = listOf<KTypeParameter>()
-		override val visibility get() = throw NotImplementedError()
+		override val visibility get() = null
 
 		override fun call(vararg args: Any?) = throw NotImplementedError()
 

@@ -1,6 +1,7 @@
 package com.github.mnemotechnician.uidebugger.fragment
 
 import arc.Core
+import arc.func.Floatc
 import arc.graphics.Color
 import arc.graphics.g2d.*
 import arc.input.KeyCode
@@ -10,11 +11,12 @@ import arc.scene.Group
 import arc.scene.actions.Actions.color
 import arc.scene.event.*
 import arc.scene.ui.Dialog
+import arc.scene.ui.Slider
 import arc.scene.ui.layout.Cell
 import arc.scene.ui.layout.Table
-import arc.util.Align
-import arc.util.Tmp
-import com.github.mnemotechnician.mkui.*
+import arc.util.*
+import com.github.mnemotechnician.mkui.extensions.dsl.*
+import com.github.mnemotechnician.mkui.extensions.elements.cell
 import com.github.mnemotechnician.uidebugger.element.elementDisplay
 import com.github.mnemotechnician.uidebugger.element.propertyField
 import com.github.mnemotechnician.uidebugger.service.Service
@@ -91,15 +93,31 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 
 			pager {
 				addPage("preferences") {
-					defaults().pad(5f)
+					defaults().pad(3f).growX()
 
-					addTable(Tex.button) {
-						toggleOption(Bundles.debugBounds, { Prefs.isElementDebugEnabled }, { Prefs.isElementDebugEnabled = it })
-					}.growX().row()
+					toggleOption(Bundles.debugBounds, { Prefs.isElementDebugEnabled }, { Prefs.isElementDebugEnabled = it })
 
-					addCollapser({ Prefs.isElementDebugEnabled }, Tex.button, animate = true) {
-						toggleOption(Bundles.debugHiddenElements, { Prefs.forceElementDebug }, { Prefs.forceElementDebug = it })
-					}.growX().row()
+					toggleOption(Bundles.debugCells, { Prefs.isCellDebugEnabled }, { Prefs.isCellDebugEnabled = it }).row()
+
+					// row 2
+					addCollapser({ Prefs.isElementDebugEnabled }, animate = true) {
+						toggleOption(Bundles.debugHiddenElements, { Prefs.forceElementDebug }, { Prefs.forceElementDebug = it }).growX()
+					}.row()
+
+					// row 3
+					addCollapser({ Prefs.isElementDebugEnabled || Prefs.isElementDebugEnabled }, animate = true) {
+						sliderOption(
+							Bundles.boundsOpacity,
+							1f / 256, 1f, 1f / 256,
+							{ Prefs.boundsOpacity }, { Prefs.boundsOpacity = it }
+						).growX()
+
+						sliderOption(
+							Bundles.boundsThickness,
+							0.1f, 10f, 0.1f,
+							{ Prefs.boundsThickness }, { Prefs.boundsThickness = it }
+						).growX()
+					}.colspan(2).row()
 				}
 
 				addPage("preview") {
@@ -199,7 +217,6 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 
 				addPage("other properties") {
 					lateinit var table: Table
-					addLabel("Not fully implemented yet.").color(Color.red).scaleFont(1.5f).row()
 
 					addTable {
 						defaults().pad(5f)
@@ -250,17 +267,37 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 		}
 	}
 
-	/**
-	 * Adds a toggle option.
-	 */
-	private inline fun Table.toggleOption(label: String, crossinline getter: () -> Boolean, crossinline setter: (Boolean) -> Unit) {
-		addLabel(label).labelAlign(Align.left).growX()
-
-		customButton({ addLabel({ if (getter()) Bundles.enabled else Bundles.disabled }) }, Styles.togglet) {
+	/** Adds a toggle option. */
+	private inline fun Table.toggleOption(label: String, crossinline getter: () -> Boolean, crossinline setter: (Boolean) -> Unit) = run {
+		customButton({
+			addLabel(label).labelAlign(Align.left).growX()
+			addLabel({ if (getter()) Bundles.enabled else Bundles.disabled }).labelAlign(Align.right)
+		}, Styles.togglet) {
 			setter(!getter())
-		}.update {
+		}.pad(10f).update {
 			it.isChecked = getter()
 		}.minWidth(80f)
+	}
+
+	/** Adds a slider option */
+	private inline fun Table.sliderOption(text: String, min: Float, max: Float, step: Float, crossinline getter: () -> Float, setter: Floatc) = run {
+		lateinit var slider: Slider
+		addStack(
+			Slider(min, max, step, false).also {
+				slider = it
+				it.fillParent = true
+				it.moved(setter)
+				it.update {
+					if (!it.isDragging) it.value = getter()
+				}
+			},
+			createTable {
+				defaults().pad(5f)
+
+				addLabel("$text: ").labelAlign(Align.left).growX()
+				addLabel({ Strings.autoFixed(slider.value, 2) })
+			}
+		)
 	}
 
 	/**

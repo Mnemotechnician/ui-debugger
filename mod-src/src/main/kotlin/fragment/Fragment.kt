@@ -3,7 +3,7 @@ package com.github.mnemotechnician.uidebugger.fragment
 import arc.scene.Element
 import arc.scene.Group
 import arc.scene.ui.layout.Table
-import com.github.mnemotechnician.mkui.deepShrink
+import com.github.mnemotechnician.mkui.extensions.groups.*
 
 /**
  * Represents a reusable UI fragment.

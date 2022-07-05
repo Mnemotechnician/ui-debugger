@@ -1,50 +1,39 @@
 package com.github.mnemotechnician.uidebugger.util
 
-import arc.Core
-import kotlin.reflect.KProperty
+import com.github.mnemotechnician.mkui.delegates.bundle
 
 /**
  * Convenient aliases for [arc.Core.bundle] stuff.
  */
 object Bundles {
-	val propertyList by bundle()
-	val currentObject by bundle()
-	val resetToElement by bundle()
-	val showIn by bundle()
-	val inThisTable by bundle()
-	val inWindow by bundle()
-	val classHasNoMembers by bundle()
+	val propertyList by udbundle()
+	val currentObject by udbundle()
+	val resetToElement by udbundle()
+	val showIn by udbundle()
+	val inThisTable by udbundle()
+	val inWindow by udbundle()
+	val classHasNoMembers by udbundle()
+	val change by udbundle()
+	val constant by udbundle()
 
-	val showInWindow by bundle()
-	val debugBounds by bundle()
-	val debugHiddenElements by bundle()
-	val noElement by bundle()
-	val currentElement by bundle()
+	val showInWindow by udbundle()
+	val noElement by udbundle()
+	val currentElement by udbundle()
 
-	val clickConfirm by bundle()
-	val elementSelectTitle by bundle()
+	val debugBounds by udbundle()
+	val debugHiddenElements by udbundle()
+	val debugCells by udbundle()
+	val boundsOpacity by udbundle()
+	val boundsThickness by udbundle()
 
-	val enabled by bundle()
-	val disabled by bundle()
+	val clickConfirm by udbundle()
+	val elementSelectTitle by udbundle()
 
-	val uiDebuggerTitle by bundle()
-	val uiDebugger by bundle()
+	val enabled by udbundle()
+	val disabled by udbundle()
 
-	/**
-	 * Creates a property delegate that returns the value of the corresponding mindustry bundle string.
-	 * The returned delegate is not to be re-used.
-	 */
-	fun bundle(prefix: String = "uidebugger.") = BundleDelegate(prefix)
+	val uiDebuggerTitle by udbundle()
+	val uiDebugger by udbundle()
 
-	class BundleDelegate internal constructor(val prefix: String) {
-		var cachedName: String? = null
-
-		operator fun getValue(thisRef: Any?, property: KProperty<*>): String {
-			return Core.bundle[computeName(property)]
-		}
-
-		private fun computeName(property: KProperty<*>) = cachedName ?: "$prefix${property.name}".also {
-			cachedName = it
-		}
-	}
+	private fun udbundle() = bundle("uidebugger.")
 }

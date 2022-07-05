@@ -3,7 +3,7 @@ package com.github.mnemotechnician.uidebugger.fragment
 import arc.scene.style.TextureRegionDrawable
 import arc.scene.ui.layout.Table
 import arc.util.Align
-import com.github.mnemotechnician.mkui.*
+import com.github.mnemotechnician.mkui.extensions.dsl.*
 import com.github.mnemotechnician.mkui.windows.Window
 import com.github.mnemotechnician.mkui.windows.WindowManager
 import com.github.mnemotechnician.uidebugger.element.propertyElement
@@ -49,7 +49,9 @@ object PropertyListFragment : Fragment<Table, Table>() {
 		}.color(Pal.darkestGray).pad(5f).row()
 
 		scrollPane {
-			hierarchyRoot = this
+			addCollapser({ currentObject != null }) {
+				hierarchyRoot = this
+			}
 		}
 	}
 
@@ -94,9 +96,7 @@ object PropertyListFragment : Fragment<Table, Table>() {
 			addTable {
 				left()
 				addLabel(cls.toString()).labelAlign(Align.left).pad(5f).growX()
-				addImage(iconUp).update { // todo: addImage does not support drawables, should update mkui.
-					it.drawable = if (isShown) iconUp else iconDown
-				}
+				addImage({ if (isShown) iconUp else iconDown })
 					
 				hsplitter(padTop = 3f, padBottom = 7f)
 
@@ -110,8 +110,8 @@ object PropertyListFragment : Fragment<Table, Table>() {
 					cls.declaredFields.forEach { field ->
 						propertyElement(
 							{ currentObject },
-							field.createMutableProperty<Any, Any>(),
-							field.type
+							field.createMutableProperty(),
+							field.type as Class<out Any>
 						).fillX()
 
 						imageButton(Icon.right) {

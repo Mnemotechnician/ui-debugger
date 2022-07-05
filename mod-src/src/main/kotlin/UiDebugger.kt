@@ -9,7 +9,9 @@ import arc.scene.ui.Button
 import arc.scene.ui.Image
 import arc.scene.ui.layout.Table
 import arc.util.*
-import com.github.mnemotechnician.mkui.*
+import com.github.mnemotechnician.mkui.extensions.dsl.textButton
+import com.github.mnemotechnician.mkui.extensions.elements.findElement
+import com.github.mnemotechnician.mkui.extensions.elements.findOrNull
 import com.github.mnemotechnician.mkui.windows.Window
 import com.github.mnemotechnician.mkui.windows.WindowManager
 import com.github.mnemotechnician.uidebugger.fragment.DebuggerMenuFragment
@@ -92,7 +94,7 @@ class UiDebugger : Mod() {
 			} else {
 				lastButton = container.add(MobileButton(Icon.terminal, Bundles.uiDebugger, menuButtonAction)).get()
 				// move the button to the upper row
-				container.children.let {
+				container.cells.let {
 					it.insert(it.size - 2, it.pop())
 				}
 			}

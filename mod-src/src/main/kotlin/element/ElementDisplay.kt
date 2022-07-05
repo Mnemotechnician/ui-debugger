@@ -8,7 +8,6 @@ import arc.scene.Group
 import arc.scene.style.Drawable
 import arc.scene.ui.layout.Cell
 import arc.scene.ui.layout.Table
-import arc.util.Align
 import mindustry.gen.Icon
 import mindustry.ui.Styles
 import kotlin.math.min
@@ -24,6 +23,7 @@ class ElementDisplay(
 	var element: Element?
 ) : Group() {
 	var background: Drawable = Styles.black3
+	var padding = 5f
 	var maxDisplayHeight = 500f
 	var maxDisplayWidth = 500f
 
@@ -40,34 +40,33 @@ class ElementDisplay(
 
 		val element = element // please, kotlin
 		if (element != null) {
-			if (!clipBegin()) return
+			if (!clipBegin(padding, padding, width - padding, height - padding)) return
 
 			// this is a circus... i wounder if there's a better way to do that
 			val oldX = element.x
 			val oldY = element.y
-			val oldOriginX = element.originX
-			val oldOriginY = element.originY
+//			val oldOriginX = element.originX
+//			val oldOriginY = element.originY
 			val oldParent = element.parent
 
-			element.x = 0f
-			element.y = 0f
-			element.setOrigin(Align.bottomLeft)
+			element.x = padding
+			element.y = padding
+//			element.setOrigin(Align.bottomLeft)
 			element.parent = this
 			element.draw()
 
 			element.x = oldX
 			element.y = oldY
-			element.originX = oldOriginX
-			element.originY = oldOriginY
+//			element.originX = oldOriginX
+//			element.originY = oldOriginY
 			element.parent = oldParent
 
 			clipEnd()
 		} else {
-			// hardcoded padding of 3
-			if (width < 6 || height < 6) return
+			if (width < padding * 2 || height < padding * 2) return
 
 			Draw.color(Color.red)
-			Icon.cancel.draw(3f, 3f, width - 3, height - 3)
+			Icon.cancel.draw(padding, padding, width - padding * 2, height - padding * 2)
 		}
 	}
 

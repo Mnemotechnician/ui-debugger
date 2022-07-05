@@ -8,7 +8,7 @@ import arc.scene.actions.ColorAction
 import arc.scene.ui.TextField
 import arc.scene.ui.layout.Cell
 import arc.scene.ui.layout.Table
-import com.github.mnemotechnician.mkui.content
+import com.github.mnemotechnician.mkui.extensions.elements.content
 import mindustry.ui.Styles
 import kotlin.reflect.KMutableProperty1
 

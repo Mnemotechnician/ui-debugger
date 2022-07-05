@@ -5,7 +5,7 @@ import arc.scene.Element
 import arc.scene.Group
 import arc.scene.ui.Label
 import arc.scene.ui.TextButton
-import com.github.mnemotechnician.mkui.content
+import com.github.mnemotechnician.mkui.extensions.elements.content
 
 /**
  * Returns the simple name of the object's class.
