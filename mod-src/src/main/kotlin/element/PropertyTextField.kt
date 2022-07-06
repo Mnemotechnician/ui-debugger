@@ -32,7 +32,7 @@ import kotlin.reflect.KMutableProperty1
 @Suppress("MemberVisibilityCanBePrivate", "LeakingThis")
 open class PropertyTextField<T, O>(
 	var obj: O?,
-	protected val property: KMutableProperty1<O, T>,
+	protected val property: KMutableProperty1<in O, T>,
 	protected val converter: (String) -> T,
 	protected val backConverter: (T) -> String = { it.toString() },
 	style: TextFieldStyle = Styles.defaultField
@@ -177,7 +177,7 @@ open class PropertyTextField<T, O>(
  */
 fun <T, O: Any> Table.propertyField(
 	objProvider: () -> O?,
-	property: KMutableProperty1<O, T>,
+	property: KMutableProperty1<in O, T>,
 	converter: (String) -> T,
 	backConverter: (T) -> String = { it.toString() }
 ): Cell<PropertyTextField<T, O>> {

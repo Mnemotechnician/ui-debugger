@@ -5,6 +5,7 @@ import arc.math.geom.Vec2
 import arc.scene.ui.layout.Cell
 import arc.scene.ui.layout.Table
 import arc.util.Align
+import arc.util.Log
 import com.github.mnemotechnician.mkui.extensions.dsl.*
 import com.github.mnemotechnician.mkui.extensions.elements.scaleFont
 import com.github.mnemotechnician.uidebugger.element.PropertyElement.Companion.modifiers
@@ -17,9 +18,9 @@ import kotlin.reflect.KMutableProperty1
 /**
  * Note: the receiver of KMutableProperty and the output of objProvider must be of the same class.
  */
-typealias InputConstructor<T> = Table.(KMutableProperty1<Any, T>, objProvider: () -> Any?) -> Unit
+typealias InputConstructor<T> = Table.(KMutableProperty1<in Any, T>, objProvider: () -> Any?) -> Unit
 /** Same as [InputConstructor] but accepts a type argument */
-typealias InputConstructorTyped<T> = Table.(KMutableProperty1<Any, T>, objProvider: () -> Any?, type: Class<T>) -> Unit
+typealias InputConstructorTyped<T> = Table.(KMutableProperty1<in Any, T>, objProvider: () -> Any?, type: Class<out T>) -> Unit
 
 /**
  * A UI element that allows the user to modify a property depending on its type.
@@ -42,7 +43,10 @@ class PropertyElement<T, O: Any>(
 ) : Table() {
 	init {
 		// I'm not adding the reflection api and without it there may be an exception...
-		val isConst = try { property.isConst } catch (e: Throwable) { false }
+		val isConst = try { property.isConst } catch (e: Throwable) {
+			Log.warn("property.isConst threw an exception: $e")
+			false
+		}
 
 		addTable {
 			left().defaults().fillX()
@@ -54,17 +58,18 @@ class PropertyElement<T, O: Any>(
 			}
 		}.pad(5f)
 
-		defaults().expandX().right()
-
 		// GOSH I HATE JVM GENERICS
-		val prop = property as KMutableProperty1<Any, Any?>
-		val type = propertyType as Class<Any?>
-		when {
-			isConst -> fallbackModifier(property, objProvider)
-			propertyType.isEnum -> enumModifier(prop, objProvider, type)
-			else -> inputConstructorFor(type)(prop, objProvider)
-		}
+		addTable {
+			defaults().expandX().right()
 
+			val prop = property as KMutableProperty1<Any, Any?>
+			val type = propertyType as Class<Any?>
+			when {
+				isConst -> fallbackModifier(property, objProvider)
+				propertyType.isEnum -> enumModifier(prop, objProvider, type)
+				else -> inputConstructorFor(type)(prop, objProvider)
+			}
+		}.growX()
 	}
 
 	/**
@@ -148,11 +153,10 @@ class PropertyElement<T, O: Any>(
 
 			row().addCollapser({ toggle.isEnabled }, animate = true) {
 				type.enumConstants.forEachIndexed { index, value ->
-					textButton(value.toString()) {
+					textButton("${index + 1}. $value") {
 						prop[prov] = value
 						toggle.isEnabled = false
-					}.margin(5f)
-					if (index % 2 == 1) row()
+					}.growX().margin(5f).row()
 				}
 			}
 		}
@@ -184,9 +188,9 @@ class PropertyElement<T, O: Any>(
 			) as InputConstructor<T>
 		}
 
-		private operator fun <T> KMutableProperty1<Any, T>.get(prov: () -> Any?) = prov()?.let { get(it) }
+		private operator fun <T> KMutableProperty1<in Any, T>.get(prov: () -> Any?) = prov()?.let { get(it) }
 
-		private operator fun <T> KMutableProperty1<Any, T>.set(prov: () -> Any?, value: T) = prov()?.let { set(it, value) }
+		private operator fun <T> KMutableProperty1<in Any, T>.set(prov: () -> Any?, value: T) = prov()?.let { set(it, value) }
 	}
 }
 

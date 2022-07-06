@@ -24,6 +24,7 @@ import mindustry.gen.Icon
 import mindustry.graphics.Pal
 import mindustry.mod.Mod
 import mindustry.ui.MobileButton
+import mindustry.ui.Styles
 import mindustry.ui.dialogs.BaseDialog
 
 class UiDebugger : Mod() {
@@ -80,7 +81,7 @@ class UiDebugger : Mod() {
 		lastButton?.remove() // ensure there's no duplicates.
 
 		// reflective access is no good, but MenuFragment.container is private
-		val container = try {
+		var container = try {
 			(Reflect.get(Vars.ui.menufrag, "container") as Table).findElement<Table>("buttons")
 		} catch (e: Throwable) {
 			Log.err("Cannot access 'Vars.ui.menufrag.container'", e)
@@ -93,16 +94,18 @@ class UiDebugger : Mod() {
 				lastButton = container.add(MobileButton(Icon.terminal, Bundles.uiDebugger, menuButtonAction)).colspan(2).get()
 			} else {
 				lastButton = container.add(MobileButton(Icon.terminal, Bundles.uiDebugger, menuButtonAction)).get()
-				// move the button to the upper row
+				// move the button
 				container.cells.let {
 					it.insert(it.size - 2, it.pop())
 				}
 			}
 		} else {
 			container.row()
-			lastButton = container.button(Bundles.uiDebugger, Icon.terminal, menuButtonAction).marginLeft(11f).update {
+			lastButton = container.button(
+				Bundles.uiDebugger, Icon.terminal, Styles.flatToggleMenut, menuButtonAction
+			).marginLeft(11f).update {
 				it.isChecked = menuDialog.isShown
-			}.get()
+			}.checked { menuDialog.isShown }.get()
 		}
 
 		// we do a little juicy bit of trolling

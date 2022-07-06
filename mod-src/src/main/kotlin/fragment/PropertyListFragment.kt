@@ -1,5 +1,6 @@
 package com.github.mnemotechnician.uidebugger.fragment
 
+import arc.graphics.Color
 import arc.scene.style.TextureRegionDrawable
 import arc.scene.ui.layout.Table
 import arc.util.Align
@@ -45,22 +46,25 @@ object PropertyListFragment : Fragment<Table, Table>() {
 
 			textButton(Bundles.resetToElement) {
 				currentObject = DebuggerMenuFragment.currentElement
+			}.update {
+				it.setColor(if (DebuggerMenuFragment.currentElement != null) Color.white else Pal.redLight)
 			}
 		}.color(Pal.darkestGray).pad(5f).row()
 
-		scrollPane {
+		scrollPane() {
 			addCollapser({ currentObject != null }) {
 				hierarchyRoot = this
 			}
-		}
+		}.growY()
 	}
 
 	override fun applied() {
 		window?.destroy()
+		window = null
 	}
 
 	/**
-	 * Rebuilds the property list, reusing as much as possible.
+	 * Rebuilds the property list.
 	 */
 	private fun rebuild(forClass: Class<*>) {
 		hierarchyRoot.clearChildren()
@@ -138,6 +142,7 @@ object PropertyListFragment : Fragment<Table, Table>() {
 		}
 	}
 
+	// todo might be utterly useless
 	/**
 	 * Utility service for [PropertyListFragment].
 	 */

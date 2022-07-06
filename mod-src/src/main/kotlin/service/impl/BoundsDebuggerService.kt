@@ -45,6 +45,7 @@ class BoundsDebuggerService : Service() {
 
 	private fun renderBounds(element: Element, parentVisible: Boolean) {
 		val visible = element.visible && parentVisible
+		val coords = element.localToStageCoordinates(Tmp.v1.set(0f, 0f))
 
 		if (debugElements) {
 			Draw.color(when {
@@ -53,7 +54,6 @@ class BoundsDebuggerService : Service() {
 				else -> Color.red // invisible
 			}, alpha)
 
-			val coords = element.localToStageCoordinates(Tmp.v1.set(0f, 0f))
 			Lines.rect(coords.x, coords.y, element.width, element.height)
 		}
 
@@ -62,15 +62,13 @@ class BoundsDebuggerService : Service() {
 
 			var pos = 0f
 			repeat(element.columns) {
-				val width = element.getColumnWidth(it)
-				Lines.line(element.x + pos, element.y, element.x + pos, element.y + element.height)
-				pos += width
+				Lines.line(coords.x + pos, coords.y, coords.x + pos, coords.y + element.height)
+				pos += element.getColumnWidth(it)
 			}
 			pos = 0f
 			repeat(element.rows) {
-				val height = element.getRowHeight(it)
-				Lines.line(element.x, element.y + pos, element.x + element.width, height + pos)
-				pos += height
+				Lines.line(coords.x, coords.y + pos, coords.x + element.width, coords.y + pos)
+				pos += element.getRowHeight(it)
 			}
 		}
 

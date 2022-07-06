@@ -42,24 +42,20 @@ class ElementDisplay(
 		if (element != null) {
 			if (!clipBegin(padding, padding, width - padding, height - padding)) return
 
-			// this is a circus... i wounder if there's a better way to do that
 			val oldX = element.x
 			val oldY = element.y
-//			val oldOriginX = element.originX
-//			val oldOriginY = element.originY
 			val oldParent = element.parent
 
 			element.x = padding
 			element.y = padding
-//			element.setOrigin(Align.bottomLeft)
 			element.parent = this
-			element.draw()
+			children.add(element)
+			super.drawChildren()
 
 			element.x = oldX
 			element.y = oldY
-//			element.originX = oldOriginX
-//			element.originY = oldOriginY
 			element.parent = oldParent
+			children.clear()
 
 			clipEnd()
 		} else {
@@ -84,13 +80,12 @@ class ElementDisplay(
 		if (element != null && (element!!.width != lastSize.x || element!!.height != lastSize.y)) {
 			lastSize.set(element!!.width, element!!.height)
 			invalidateHierarchy()
-			pack()
 		}
 	}
 
-	override fun getPrefWidth() = min(element?.prefWidth ?: 30f, maxDisplayWidth)
+	override fun getPrefWidth() = min(element?.width ?: 30f, maxDisplayWidth)
 
-	override fun getPrefHeight() = min(element?.prefHeight ?: 30f, maxDisplayHeight)
+	override fun getPrefHeight() = min(element?.height ?: 30f, maxDisplayHeight)
 
 	/**
 	 * Sets an element provider, which is called on every frame to provide an [element].

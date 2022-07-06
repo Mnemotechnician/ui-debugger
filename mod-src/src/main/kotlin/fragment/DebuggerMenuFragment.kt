@@ -84,7 +84,7 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 					} else {
 						"${Bundles.currentElement}: ${currentElement.elementToString()}"
 					}
-				}).labelAlign(Align.left).growX()
+				}, wrap = false).labelAlign(Align.left).growX()
 
 				textButton("Select an element") {
 					invokeElementSelection()
@@ -93,7 +93,7 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 
 			pager {
 				addPage("preferences") {
-					defaults().pad(3f).growX()
+					defaults().pad(3f)
 
 					toggleOption(Bundles.debugBounds, { Prefs.isElementDebugEnabled }, { Prefs.isElementDebugEnabled = it })
 
@@ -101,8 +101,8 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 
 					// row 2
 					addCollapser({ Prefs.isElementDebugEnabled }, animate = true) {
-						toggleOption(Bundles.debugHiddenElements, { Prefs.forceElementDebug }, { Prefs.forceElementDebug = it }).growX()
-					}.row()
+						toggleOption(Bundles.debugHiddenElements, { Prefs.forceElementDebug }, { Prefs.forceElementDebug = it })
+					}.growX().row()
 
 					// row 3
 					addCollapser({ Prefs.isElementDebugEnabled || Prefs.isElementDebugEnabled }, animate = true) {
@@ -110,14 +110,14 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 							Bundles.boundsOpacity,
 							1f / 256, 1f, 1f / 256,
 							{ Prefs.boundsOpacity }, { Prefs.boundsOpacity = it }
-						).growX()
+						)
 
 						sliderOption(
 							Bundles.boundsThickness,
 							0.1f, 10f, 0.1f,
 							{ Prefs.boundsThickness }, { Prefs.boundsThickness = it }
-						).growX()
-					}.colspan(2).row()
+						)
+					}.colspan(2).growX().row()
 				}
 
 				addPage("preview") {
@@ -238,7 +238,7 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 				addPage("hierarchy") {
 					addTable {
 						addLabel("Parent: ").growX()
-						addLabel({ currentElement?.parent.elementToString() }).growX().labelAlign(Align.left)
+						addLabel({ currentElement?.parent.elementToString() }, wrap = false).growX().labelAlign(Align.left)
 
 						textButton("select") {
 							currentElement = currentElement!!.parent
@@ -274,9 +274,9 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 			addLabel({ if (getter()) Bundles.enabled else Bundles.disabled }).labelAlign(Align.right)
 		}, Styles.togglet) {
 			setter(!getter())
-		}.pad(10f).update {
+		}.update {
 			it.isChecked = getter()
-		}.minWidth(80f)
+		}.pad(2f).growX()
 	}
 
 	/** Adds a slider option */
@@ -293,11 +293,12 @@ object DebuggerMenuFragment : Fragment<Group, Table>() {
 			},
 			createTable {
 				defaults().pad(5f)
+				touchable = Touchable.disabled
 
 				addLabel("$text: ").labelAlign(Align.left).growX()
 				addLabel({ Strings.autoFixed(slider.value, 2) })
 			}
-		)
+		).pad(2f).growX()
 	}
 
 	/**
