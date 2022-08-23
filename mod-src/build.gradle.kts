@@ -14,10 +14,10 @@ repositories {
 dependencies {
 	implementation(kotlin("stdlib-jdk8"))
 	
-	compileOnly("com.github.Anuken.Arc:arc-core:master-da27a54ef9-1") // 2022.06.27.
-	compileOnly("com.github.Anuken:MindustryJitpack:d380051459")
+	compileOnly("com.github.Anuken.Arc:arc-core:v137")
+	compileOnly("com.github.Anuken:MindustryJitpack:74a0321db8")
 
-	implementation("com.github.mnemotechnician:mkui:v1.0")
+	implementation("com.github.mnemotechnician:mkui:-SNAPSHOT")
 }
 
 tasks.withType<KotlinCompile> {
