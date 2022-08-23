@@ -11,7 +11,7 @@ You can also view this menu in a separate window by clicking the respective butt
 displayName: "UI Debugger"
 author: "Mnemotechnician"
 minGameVersion: "136"
-version: "v0.1"
+version: "v0.1.1"
 
 main: "com.github.mnemotechnician.uidebugger.UiDebugger"
 hidden: true
