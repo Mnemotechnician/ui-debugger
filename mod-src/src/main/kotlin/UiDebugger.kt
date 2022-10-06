@@ -6,12 +6,8 @@ import arc.graphics.Color
 import arc.math.Interp
 import arc.scene.actions.Actions.*
 import arc.scene.ui.Button
-import arc.scene.ui.Image
-import arc.scene.ui.layout.Table
 import arc.util.*
-import com.github.mnemotechnician.mkui.extensions.dsl.textButton
-import com.github.mnemotechnician.mkui.extensions.elements.findElement
-import com.github.mnemotechnician.mkui.extensions.elements.findOrNull
+import com.github.mnemotechnician.mkui.extensions.dsl.*
 import com.github.mnemotechnician.mkui.windows.Window
 import com.github.mnemotechnician.mkui.windows.WindowManager
 import com.github.mnemotechnician.uidebugger.fragment.DebuggerMenuFragment
@@ -23,7 +19,6 @@ import mindustry.game.EventType
 import mindustry.gen.Icon
 import mindustry.graphics.Pal
 import mindustry.mod.Mod
-import mindustry.ui.MobileButton
 import mindustry.ui.Styles
 import mindustry.ui.dialogs.BaseDialog
 
@@ -59,66 +54,15 @@ class UiDebugger : Mod() {
 		}
 	}
 
-	private val menuButtonAction = Runnable {
-		lastWindow?.destroy()?.also { lastWindow = null }
-		DebuggerMenuFragment.apply(menuDialog.cont)
-		DebuggerMenuFragment.onElementSelection({ menuDialog.hide() }, { menuDialog.show() })
-		menuDialog.show()
-	}
-
 	init {
-		Events.on(EventType.ResizeEvent::class.java) {
-			if (Vars.state.isMenu) {
-				// why is a delay needed? how do I know? ask Anuke.
-				Time.run(0f) { createMenuButton() }
+		Events.on(EventType.ClientLoadEvent::class.java) {
+			Vars.ui.menufrag.addButton(Bundles.uiDebugger, Icon.terminal) {
+				lastWindow?.destroy()?.also { lastWindow = null }
+				DebuggerMenuFragment.apply(menuDialog.cont)
+				DebuggerMenuFragment.onElementSelection({ menuDialog.hide() }, { menuDialog.show() })
+				menuDialog.show()
 			}
 		}
-
 		ServiceManager.start(BoundsDebuggerService())
-	}
-
-	private fun createMenuButton() {
-		lastButton?.remove() // ensure there's no duplicates.
-
-		// reflective access is no good, but MenuFragment.container is private
-		var container = try {
-			(Reflect.get(Vars.ui.menufrag, "container") as Table).findElement<Table>("buttons")
-		} catch (e: Throwable) {
-			Log.err("Cannot access 'Vars.ui.menufrag.container'", e)
-			return
-		}
-
-		if (Vars.mobile) {
-			if (Core.graphics.isPortrait) {
-				container.row()
-				lastButton = container.add(MobileButton(Icon.terminal, Bundles.uiDebugger, menuButtonAction)).colspan(2).get()
-			} else {
-				lastButton = container.add(MobileButton(Icon.terminal, Bundles.uiDebugger, menuButtonAction)).get()
-				// move the button
-				container.cells.let {
-					it.insert(it.size - 2, it.pop())
-				}
-			}
-		} else {
-			container.row()
-			lastButton = container.button(
-				Bundles.uiDebugger, Icon.terminal, Styles.flatToggleMenut, menuButtonAction
-			).marginLeft(11f).update {
-				it.isChecked = menuDialog.isShown
-			}.checked { menuDialog.isShown }.get()
-		}
-
-		// we do a little juicy bit of trolling
-		lastButton?.findOrNull<Image>()?.addAction(forever(
-			delay(2.4f, parallel(
-				rotateBy(720f, 2.4f) { Interp.swingOut.apply(Interp.sineIn.apply(it)) },
-				sequence(
-					translateBy(0f, 20f, 1.3f, Interp.sineOut),
-					translateBy(0f, -20f, 1.1f) { Interp.bounceOut.apply(Interp.sineIn.apply(it)) }
-				)
-			))
-		))
-
-		container.invalidateHierarchy()
 	}
 }
