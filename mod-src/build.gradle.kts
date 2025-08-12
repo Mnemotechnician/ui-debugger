@@ -9,14 +9,14 @@ val jarName = "ui-debugger"
 repositories {
 	mavenCentral()
 	maven("https://raw.githubusercontent.com/Zelaux/MindustryRepo/master/repository")
-	maven("https://jitpack.io")
+	maven("https://www.jitpack.io")
 }
 
 dependencies {
 	implementation(kotlin("stdlib-jdk8"))
 	
 	compileOnly("com.github.Anuken.Arc:arc-core:v149")
-	compileOnly("com.github.Anuken:Mindustry:core:v149")
+	compileOnly("com.github.Anuken.Mindustry:core:v149")
 
 	implementation("com.github.mnemotechnician:mkui:v1.3.0")
 }
