@@ -71,7 +71,7 @@ task("jarAndroid") {
 		//dexing. As a result of this process, a .dex file will be added to the jar file. This requires d8 tool in your $PATH
 		exec {
 			workingDir("$buildDir/libs")
-			commandLine("d8", *dependenciesStr, "--min-api", "14", "--output", "${jarName}-android.jar", "${jarName}-desktop.jar")
+			commandLine("${platformRoot.absolutePath}/d8", *dependenciesStr, "--min-api", "14", "--output", "${jarName}-android.jar", "${jarName}-desktop.jar")
 			errorOutput = System.err
 		}
 	}
