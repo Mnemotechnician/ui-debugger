@@ -32,7 +32,7 @@ task("jarAndroid") {
 	
 	doLast {
 		val sdkRoot = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
-		
+
 		if(sdkRoot == null || sdkRoot.isEmpty() || !File(sdkRoot).exists()) {
 			throw GradleException("""
 				No valid Android SDK found. Ensure that ANDROID_HOME is set to your Android SDK directory.
@@ -40,12 +40,12 @@ task("jarAndroid") {
 				In this case you have to run "./gradlew --stop" and try again
 			""".trimIndent())
 		}
-		
+
 		println("searching for an android sdk... ")
 		val platformRoot = File("$sdkRoot/platforms/").listFiles()?.filter {
 			val fi = File(it, "android.jar")
 			val valid = fi.exists() && it.name.startsWith("android-")
-			
+
 			if (valid) {
 				print(it)
 				println(" — OK.")
@@ -54,25 +54,47 @@ task("jarAndroid") {
 		}?.maxByOrNull {
 			it.name.substring("android-".length).toIntOrNull() ?: -1
 		}
-		
+
 		if (platformRoot == null) {
 			throw GradleException("No android.jar found. Ensure that you have an Android platform installed. (platformRoot = $platformRoot)")
 		} else {
-			println("using ${platformRoot.absolutePath}")
+			println("using ${platformRoot.absolutePath} as platform root")
 		}
-		
-		
+
+		val d8Name = if (System.getenv("OS").equals("Windows_NT")) "d8.bat" else "d8"
+		println("searching for an android build tools... ")
+		val buildToolsRoot = File("$sdkRoot/build-tools/").listFiles()?.filter {
+			val fi = File(it, d8Name)
+			val valid = fi.exists()
+
+			if (valid) {
+				print(it)
+				println(" — OK.")
+			}
+			return@filter valid
+		}?.maxByOrNull {
+			it.name.substring(0, it.name.indexOf('.')).toIntOrNull() ?: -1
+		}
+
+		if (buildToolsRoot == null) {
+			throw GradleException("No d8 found. Ensure that you have an Android build tools installed. (buildToolsRoot = $platformRoot)")
+		} else {
+			println("using ${buildToolsRoot.absolutePath} as build tools")
+		}
+
+
 		//collect dependencies needed to translate java 8 bytecode code to android-compatible bytecode (yeah, android's dvm and art do be sucking)
 		val dependencies = (configurations.compileClasspath.files + configurations.runtimeClasspath.files + File(platformRoot, "android.jar")).map { it.path }
 		val dependenciesStr = Array<String>(dependencies.size * 2) {
 			if (it % 2 == 0) "--classpath" else dependencies.elementAt(it / 2)
 		}
-		
+
 		//dexing. As a result of this process, a .dex file will be added to the jar file. This requires d8 tool in your $PATH
 		exec {
 			workingDir("$buildDir/libs")
-			commandLine("${platformRoot.absolutePath}/d8", *dependenciesStr, "--min-api", "14", "--output", "${jarName}-android.jar", "${jarName}-desktop.jar")
+			commandLine("${buildToolsRoot.absolutePath}/$d8Name", *dependenciesStr, "--min-api", "14", "--output", "${jarName}-android.jar", "${jarName}-desktop.jar")
 			errorOutput = System.out
+			environment("JAVA_HOME", System.getProperty("java.home"))
 		}
 	}
 }
