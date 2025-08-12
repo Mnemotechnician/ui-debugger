@@ -16,7 +16,7 @@ dependencies {
 	implementation(kotlin("stdlib-jdk8"))
 	
 	compileOnly("com.github.Anuken.Arc:arc-core:v149")
-	compileOnly("com.github.Anuken:MindustryJitpack:v149")
+	compileOnly("com.github.Anuken:Mindustry:v149")
 
 	implementation("com.github.mnemotechnician:mkui:v1.3.0")
 }
