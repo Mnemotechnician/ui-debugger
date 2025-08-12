@@ -12,7 +12,7 @@ jobs:
       - name: Compile the mod
         run: |
           chmod +x gradlew
-          ./gradlew release --debug
+          ./gradlew release
         
       - name: Upload the artifact
         uses: actions/upload-artifact@v4
