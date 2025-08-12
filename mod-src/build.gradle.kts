@@ -72,7 +72,7 @@ task("jarAndroid") {
 		exec {
 			workingDir("$buildDir/libs")
 			commandLine("${platformRoot.absolutePath}/d8", *dependenciesStr, "--min-api", "14", "--output", "${jarName}-android.jar", "${jarName}-desktop.jar")
-			errorOutput = System.err
+			errorOutput = System.out
 		}
 	}
 }
