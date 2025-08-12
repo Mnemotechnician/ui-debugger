@@ -18,7 +18,7 @@ dependencies {
 	compileOnly("com.github.Anuken.Arc:arc-core:v149")
 	compileOnly("com.github.Anuken:MindustryJitpack:v149")
 
-	implementation("com.github.mnemotechnician:mkui:63")
+	implementation("com.github.mnemotechnician:mkui:v1.3.0")
 }
 
 tasks.withType<KotlinCompile> {
