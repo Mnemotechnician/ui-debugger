@@ -1,4 +1,4 @@
-name: "nekit508-ui-debugger-149-port"
+name: "ui-debugger"
 description: '''
 An advanced UI Debugger that lets you do various things,
 starting from viewing the element bounds and ending with reflectively modifying the properties of every element.
@@ -8,7 +8,7 @@ This mod is unfinished and may contain some bugs or unfinished features.
 You can access the menu of this mod by clicking the "UI Debugger" button in the main menu.
 You can also view this menu in a separate window by clicking the respective button.
 '''
-displayName: "UI Debugger Unofficial"
+displayName: "UI Debugger"
 author: "Mnemotechnician"
 minGameVersion: "149"
 version: "v0.1.3"
