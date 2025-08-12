@@ -32,8 +32,6 @@ class UiDebugger : Mod() {
 			titleTable.textButton(Bundles.showInWindow) {
 				this@apply.hide()
 
-				Reflect()
-
 				lastWindow = object : Window() {
 					override val name = Bundles.uiDebugger
 					override val closeable = true
