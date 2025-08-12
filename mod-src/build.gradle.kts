@@ -8,6 +8,7 @@ val jarName = "ui-debugger"
 
 repositories {
 	mavenCentral()
+	maven("https://raw.githubusercontent.com/Zelaux/MindustryRepo/master/repository")
 	maven("https://jitpack.io")
 }
 
