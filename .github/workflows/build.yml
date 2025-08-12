@@ -8,17 +8,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      
-      - name: Add build tools to the $PATH
-        run: echo "${ANDROID_HOME}/build-tools/30.0.1" >> $GITHUB_PATH
-      
+        
       - name: Compile the mod
         run: |
-          chmod +x ./gradlew
+          chmod +x gradlew
           ./gradlew release
         
       - name: Upload the artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.repository.name }}-zipped
           path: mod-src/build/libs/ui-debugger-any-platform.jar
