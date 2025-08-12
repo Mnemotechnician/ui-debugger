@@ -8,13 +8,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      
-      - name: Add build tools to the $PATH
-        run: echo "${ANDROID_HOME}/build-tools/30.0.1" >> $GITHUB_PATH
-      
+        
       - name: Compile the mod
         run: |
-          chmod +x ./gradlew
+          chmod +x gradlew
           ./gradlew release --debug
         
       - name: Upload the artifact
