@@ -61,7 +61,7 @@ task("jarAndroid") {
 			println("using ${platformRoot.absolutePath} as platform root")
 		}
 
-		val d8Name = if (System.getenv("OS").equals("Windows_NT")) "d8.bat" else "d8"
+		val d8Name = if (Objects.equals(System.getenv("OS"), "Windows_NT")) "d8.bat" else "d8"
 		println("searching for an android build tools... ")
 		val buildToolsRoot = File("$sdkRoot/build-tools/").listFiles()?.filter {
 			val fi = File(it, d8Name)
